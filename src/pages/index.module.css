@@ -1,0 +1,153 @@
+/**
+ * 首页样式
+ */
+.hero {
+  text-align: center;
+  padding: 4rem 1rem 2rem;
+}
+
+.banner {
+  max-width: 640px;
+  width: 90%;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.heroTagline {
+  font-size: 1.2rem;
+  opacity: 0.75;
+  margin-bottom: 1.5rem;
+}
+
+.heroButtons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.section {
+  padding: 3.5rem 0;
+}
+
+/* 相邻章节（核心特性 / 文档导航等卡片区）之间拉开间隔 */
+.section + .section {
+  padding-top: 5rem;
+}
+
+/* 卡片网格行间留白：Infima .row 默认无垂直间距，两行卡片会紧贴在一起 */
+.section :global(.row) {
+  row-gap: 1.5rem;
+}
+
+.sectionTitle {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.featureCard {
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  padding: 1.25rem;
+  height: 100%;
+  background: var(--ifm-color-emphasis-100);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.featureCard:hover {
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-2px);
+}
+
+.featureIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.featureCard h3 {
+  margin-bottom: 0.5rem;
+}
+
+.featureCard p {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.chapterCard {
+  display: block;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  padding: 1.25rem;
+  height: 100%;
+  color: inherit;
+  background: var(--ifm-color-emphasis-100);
+  transition: border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.chapterCard:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.chapterCard h3 {
+  margin-bottom: 0.5rem;
+}
+
+.chapterCard p {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.screenshot {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.repoCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.repoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  padding: 1.25rem;
+  color: inherit;
+  background: var(--ifm-color-emphasis-100);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.repoCard:hover {
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.repoCard span {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+@media (max-width: 996px) {
+  .heroTitle {
+    font-size: 2.2rem;
+  }
+}

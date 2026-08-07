@@ -1,0 +1,39 @@
+/**
+ * 全局自定义样式
+ * 品牌色：JuanNiang 蓝色 #0b85d7
+ */
+
+:root {
+  --ifm-color-primary: #0b85d7;
+  --ifm-color-primary-dark: #0a76bf;
+  --ifm-color-primary-darker: #096fb5;
+  --ifm-color-primary-darkest: #085b94;
+  --ifm-color-primary-light: #2692dc;
+  --ifm-color-primary-lighter: #3699de;
+  --ifm-color-primary-lightest: #63afe5;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(11, 133, 215, 0.15);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #4da9e8;
+  --ifm-color-primary-dark: #359de4;
+  --ifm-color-primary-darker: #2a97e2;
+  --ifm-color-primary-darkest: #1a7dbf;
+  --ifm-color-primary-light: #6bb7ec;
+  --ifm-color-primary-lighter: #7abef0;
+  --ifm-color-primary-lightest: #a6d6f6;
+  --docusaurus-highlighted-code-line-bg: rgba(11, 133, 215, 0.25);
+}
+
+/* mermaid 图表容器：窄屏可横向滚动，避免溢出 */
+.docusaurus-mermaid-container {
+  overflow-x: auto;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.docusaurus-mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
