@@ -1,0 +1,32 @@
+# .gitea/workflows/build-image.yml
+name: Build Juan Docs Image
+
+on:
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  build:
+    runs-on: docker-cli
+    steps:
+      - name: Clone repository code
+        shell: sh
+        run:
+          git clone https://${{ secrets.R_USER }}:${{ secrets.R_PASSWORD }}@git.lan.tuf3i.cc/JuanNiangDev/JuanNiang-Docs.git .
+
+      - name: View current path
+        shell: sh
+        run:
+          ls
+
+      - name: Build and push
+        shell: sh
+        run: |
+          # 登录
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login "${{ secrets.REGISTRY_URL }}" -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+
+          # 构建并推送（不保留本地缓存）
+          docker build --pull --no-cache -t ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest .
+          docker push ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest
+
+          # 清理
+          docker rmi ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest || true

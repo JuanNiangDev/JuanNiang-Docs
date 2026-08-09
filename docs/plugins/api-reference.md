@@ -182,8 +182,10 @@ end
 
 | 函数 | 返回 |
 |------|------|
-| `database.query(sql) → []table [, err]` | SELECT 查询行数组 |
-| `database.exec(sql) → number [, err]` | INSERT/UPDATE/DELETE，返回影响行数 |
+| `database.query(sql [, params]) → []table [, err]` | SELECT 查询行数组 |
+| `database.exec(sql [, params]) → number [, err]` | INSERT/UPDATE/DELETE，返回影响行数 |
+
+`query`/`exec` 均支持**参数化查询**：用 `?` 占位符，第二个参数传入参数表（推荐，避免手拼 SQL 拼接注入）。拿不到参数化时可用 `jn.sql.escape` 手动转义字符串字面量（单引号 `'` → `''`）。
 
 ```lua
 -- 加载时自动建表
@@ -191,10 +193,18 @@ database.exec([[CREATE TABLE IF NOT EXISTS my_plugin_state (
   k TEXT PRIMARY KEY, v TEXT NOT NULL
 )]])
 
-local rows = database.query("SELECT k, v FROM my_plugin_state WHERE k = 'last_seen'")
+-- 参数化查询（推荐）
+local rows = database.query("SELECT k, v FROM my_plugin_state WHERE k = ?", { "last_seen" })
 for _, row in ipairs(rows) do
   log.info(row.v)
 end
+
+-- 写入（UPSERT）
+database.exec(
+  "INSERT INTO my_plugin_state (k, v) VALUES (?, ?) " ..
+  "ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v",
+  { "last_seen", "2026-01-01" }
+)
 ```
 
 ## 全局表: `cache`

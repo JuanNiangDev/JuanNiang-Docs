@@ -26,14 +26,23 @@
   --docusaurus-highlighted-code-line-bg: rgba(11, 133, 215, 0.25);
 }
 
-/* mermaid 图表容器：窄屏可横向滚动，避免溢出 */
+/* mermaid 图表容器：支持缩放/拖动（见 static/js/mermaid-panzoom.js），
+   脚本会固定容器高度，放大后的溢出部分由 overflow:hidden 裁剪，不撑大页面 */
 .docusaurus-mermaid-container {
-  overflow-x: auto;
+  overflow: hidden;
   text-align: center;
   margin: 1rem 0;
+  cursor: grab;
 }
 
+.docusaurus-mermaid-container:active {
+  cursor: grabbing;
+}
+
+/* 脚本接管前保持自适应宽度；脚本会用内联样式接管宽高并去除 max-width */
 .docusaurus-mermaid-container svg {
+  display: block;
   max-width: 100%;
   height: auto;
+  margin: 0 auto;
 }

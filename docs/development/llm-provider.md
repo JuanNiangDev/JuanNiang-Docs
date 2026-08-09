@@ -100,24 +100,21 @@ title: 多协议 LLM Provider 适配实施方案
 
 ## 4. 总体架构
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ ProviderGroup (root.go)                                  │
-│   接口不变：Chat / ChatStream / Vision / Model()          │
-├─────────────────────────────────────────────────────────┤
-│ openAIProvider (provider.go) —— 单实现，按 cfg.APIMode 分派 │
-│                                                         │
-│  endpointURL(apimode)  ──►  base URL + 自动识别完整 URL   │
-│  buildRequest(apimode) ──►  4 个协议构造器（MintWord 模式）│
-│  parseResponse(apimode) ──►  4 个响应提取器               │
-│  buildVisionPart(apimode)─►  多模态格式转换               │
-│  applyThinking(apimode, provider) ──►  厂商矩阵           │
-├─────────────────────────────────────────────────────────┤
-│ ProviderConfig (root.go) / GORM / DTO / 前端              │
-│  新增：APIMode, ThinkingEffort, ThinkingBudget,          │
-│        MaxTokens, TopP, TopK, FrequencyPenalty,         │
-│        PresencePenalty, RepetitionPenalty（可选渐进）     │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  subgraph PG["ProviderGroup (root.go)<br/>接口不变: Chat / ChatStream / Vision / Model()"]
+    direction TB
+    subgraph OPR["openAIProvider (provider.go)<br/>单实现, 按 cfg.APIMode 分派"]
+      EU["endpointURL(apimode)<br/>base URL + 自动识别完整 URL"]
+      BR["buildRequest(apimode)<br/>4 个协议构造器 (MintWord 模式)"]
+      PR["parseResponse(apimode)<br/>4 个响应提取器"]
+      BV["buildVisionPart(apimode)<br/>多模态格式转换"]
+      AT["applyThinking(apimode, provider)<br/>厂商矩阵"]
+    end
+  end
+  subgraph CFG["ProviderConfig (root.go) / GORM / DTO / 前端<br/>新增: APIMode, ThinkingEffort, ThinkingBudget,<br/>MaxTokens, TopP, TopK, FrequencyPenalty,<br/>PresencePenalty, RepetitionPenalty (可选渐进)"]
+  end
+  PG --> CFG
 ```
 
 设计原则：**接口层零改动**（`Provider` 接口、`EinoModelAdapter`、`agent.go` 等调用方不受影响），协议差异全部收敛在 `provider.go` 内部。

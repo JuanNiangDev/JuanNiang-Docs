@@ -1,7 +1,7 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-// 文档站侧边栏：按「入门 / 部署 / 二次开发 / Web API / 插件」五章组织，
-// 二次开发与插件章节内再分子分类，细化导航层级
+// 文档站侧边栏：按「入门 / 部署 / 二次开发 / Web API / 插件 / Git 指南 / Lua 开发教学」组织，
+// 二次开发与插件章节内再分子分类，细化导航层级；Git 指南与 Lua 教学为独立章节，与卷娘文档分开
 const sidebars: SidebarsConfig = {
   docs: [
     {
@@ -62,6 +62,33 @@ const sidebars: SidebarsConfig = {
         'plugins/store',
         'plugins/repo',
         'plugins/examples',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Git 指南',
+      items: [
+        'git/intro',
+        'git/install',
+        'git/account',
+        'git/repository',
+        'git/pull-request',
+        'git/cheatsheet',
+        'git/appendix',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Lua 开发教学',
+      items: [
+        'lua/intro',
+        'lua/basics',
+        'lua/control-flow',
+        'lua/functions',
+        'lua/tables',
+        'lua/metatables',
+        'lua/modules',
+        'lua/best-practices',
       ],
     },
   ],

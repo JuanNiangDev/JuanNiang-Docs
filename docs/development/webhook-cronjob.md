@@ -16,53 +16,28 @@ title: Webhook 与 CronJob 使用文档
 
 ### 架构与数据流
 
-```
-外部服务 (GitHub / 监控 / 自定义)
-  │  POST http://your-server:8091/webhook/my-plugin
-  │  Body: {"action":"opened","pull_request":{...}}
-  ▼
-WebhookAdapter (独立端口 8091, 默认关闭)
-  │  1. Token 校验 → 不匹配返回 {"code":403,"message":"forbidden"}
-  │  2. 读取 Body → JSON 解析成功则直接使用, 失败则包装为
-  │     {"raw":"原文","type":"non-json"}
-  │  3. 路径解析:
-  │     · /webhook/{plugin_name} → 调用 pluginRouter.RouteWebhook()
-  │       路由到指定插件 (按名称精确匹配)
-  │       - 命中 → {"code":0,"message":"ok"}
-  │       - 未命中 → {"code":404,"message":"plugin not found"} (HTTP 404)
-  │     · /webhook 或 / (无插件名) → legacy 广播模式
-  │       构造 Event{PostType:"webhook", Webhook:{Path, Method, Payload}, Admins}
-  │       非阻塞写入 events channel (cap=128)
-  │       - 满 → {"code":503,"message":"events channel full"}
-  ▼ (legacy 模式)
-HagoCenter.runEventLoop (事件循环 goroutine)
-  │  select 收到 webhook 事件
-  │  → processEvent(): PostType=="webhook" 分支, 构造
-  │    pluggin.EventData{
-  │      PostType:"webhook",
-  │      Webhook:{path, method, payload},
-  │      Admins: OB 管理员
-  │    }
-  │  → PluginEngine.OnWebhook(event) → 遍历所有已加载插件
-  ▼
-PluginEngine (插件引擎)
-  │  定向模式: RouteWebhook() 按名称查找插件 → 调 on_webhook(event)
-  │  广播模式: OnWebhook() 遍历所有有 webhook 权限的插件 → 调 on_webhook(event)
-  ▼
-Lua 插件 on_webhook(event)
-  │  event.webhook.path    = "/webhook/my-plugin" 或子路径
-  │  event.webhook.method  = "POST"
-  │  event.webhook.payload = {action:"opened", ...}
-  │  event.admins          = {"管理员QQ号"}
-  │
-  │  插件自行判断是否处理该事件:
-  │    · 检查 payload 字段 → 不相关则 return false
-  │    · 相关 → 执行逻辑 → return true (已消费)
-  │
-  │  定向模式下, 插件还可以 return (consumed, reply_string)
-  │  第二个返回值会作为响应 metadata 返回给调用方
-  ▼
-  处理完毕, 返回响应
+```mermaid
+flowchart TD
+  Ext["外部服务<br/>(GitHub / 监控 / 自定义)"] -->|"POST /webhook/my-plugin<br/>Body: {action, pull_request, ...}"| WA["WebhookAdapter<br/>独立端口 8091, 默认关闭"]
+  WA --> T1["1. Token 校验"]
+  T1 -->|不匹配| E403["{code:403, message:forbidden}"]
+  T1 --> T2["2. 读取 Body → JSON 解析<br/>失败包装为 {raw, type:non-json}"]
+  T2 --> T3["3. 路径解析"]
+  T3 -->|"/webhook/{plugin_name}"| RT["pluginRouter.RouteWebhook()<br/>按插件名精确匹配"]
+  RT -->|命中| OK["{code:0, message:ok}"]
+  RT -->|未命中| E404["{code:404, message:plugin not found} (HTTP 404)"]
+  T3 -->|"/webhook 或 /"| BC["legacy 广播模式<br/>构造 Event{PostType:webhook, Webhook:{Path,Method,Payload}, Admins}<br/>非阻塞写入 events channel (cap=128)"]
+  BC -->|满| E503["{code:503, message:events channel full}"]
+  BC --> EL["HagoCenter.runEventLoop<br/>(事件循环 goroutine)"]
+  EL --> PE["processEvent: PostType==webhook 分支<br/>构造 EventData{PostType, Webhook, Admins}"]
+  PE --> ON["PluginEngine.OnWebhook(event)<br/>→ 遍历所有已加载插件"]
+  ON --> PL["Lua 插件 on_webhook(event)"]
+  PL --> PD{"插件自决: 检查 payload"}
+  PD -->|不相关| F["return false"]
+  PD -->|相关 → 执行逻辑| T["return true (已消费)"]
+  T --> DR["定向模式: return (consumed, reply)<br/>reply 作为响应 metadata 返回"]
+  F --> DONE["处理完毕, 返回响应"]
+  DR --> DONE
 ```
 
 ### 核心特性
@@ -437,15 +412,16 @@ curl -X POST http://localhost:8090/api/v1/cronjobs \
 
 ### 运行时流（细节）
 
-```
-robfig/cron 到期 → CronJobManager.makeJobFunc(job)
-  ├─ DAO.CronJob.UpdateLastRun(now, err)
-  ├─ 解析 plugin_ids JSON → []string
-  ├─ 解析 payload JSON → map[string]any
-  └─ 构造 Event{PostType:"cronjob", ...}
-     └─ 注入统一事件循环 → Plugin.Dispatch
-        └─ PluginEngine.Dispatch → 遍历指定插件
-           └─ 调用 Lua on_cronjob(event)（event.payload = payload）
+```mermaid
+flowchart TD
+  Cron["robfig/cron 到期"] --> MJ["CronJobManager.makeJobFunc(job)"]
+  MJ --> U["DAO.CronJob.UpdateLastRun(now, err)"]
+  MJ --> P1["解析 plugin_ids JSON → []string"]
+  MJ --> P2["解析 payload JSON → map[string]any"]
+  MJ --> E["构造 Event{PostType:cronjob, ...}"]
+  E --> LOOP["注入统一事件循环 → Plugin.Dispatch"]
+  LOOP --> PD["PluginEngine.Dispatch → 遍历指定插件"]
+  PD --> CB["调用 Lua on_cronjob(event)<br/>event.payload = payload"]
 ```
 
 `LastRunAt`/`LastError` 回写 DB，前端"定时任务"页可看历史。删改/toggle 后由 `Service.AddCronJob/...` 调 `CronJobManager.Reload()` 同步调度器，无需重启进程。
