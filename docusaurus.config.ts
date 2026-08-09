@@ -19,6 +19,24 @@ const config: Config = {
 
   onBrokenLinks: 'warn',
 
+  // 注入脚本：chunk 加载失败自动重试 + mermaid 缩放/拖动交互
+  headTags: [
+    {
+      tagName: 'script',
+      attributes: {
+        src: '/js/chunk-retry.js',
+        defer: true,
+      },
+    },
+    {
+      tagName: 'script',
+      attributes: {
+        src: '/js/mermaid-panzoom.js',
+        defer: true,
+      },
+    },
+  ],
+
   // 站内文档为中文，设置 html lang
   i18n: {
     defaultLocale: 'zh-Hans',
@@ -68,7 +86,10 @@ const config: Config = {
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
-      respectPrefersColorScheme: true,
+      // 注意：不要开启 respectPrefersColorScheme。
+      // 开启后切换按钮是 system → light → dark → system 三态循环，
+      // 且每次切换都会触发全部 mermaid 图表重新渲染，导致严重卡顿闪屏。
+      respectPrefersColorScheme: false,
     },
     docs: {
       sidebar: {
@@ -148,9 +169,16 @@ const config: Config = {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
     },
-    // mermaid 图表主题跟随站点明暗模式
+    // mermaid 图表主题：固定为 dark，不随站点明暗模式切换。
+    // 若 theme 跟随 colorMode（如 {light:'neutral', dark:'dark'}），
+    // 每次切换明暗都会触发全部图表重新渲染（mermaid 串行渲染、体量巨大），
+    // 造成长时间卡顿闪屏，故这里固定主题。
+    // 注意：必须是 {light, dark} 对象形式（theme-mermaid 内部按 colorMode 取 theme[colorMode]），
+    // 两个值相同则明暗切换时 config 引用不变，不会触发重渲染。
+    // dark 主题自带深色背景，亮色模式下图表呈现为“深色卡片”，明暗两种模式都可读；
+    // 不要设 background: transparent，否则浅色文字在亮色页面上看不清。
     mermaid: {
-      theme: {light: 'neutral', dark: 'dark'},
+      theme: {light: 'dark', dark: 'dark'},
     },
   } satisfies Preset.ThemeConfig,
 };

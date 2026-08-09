@@ -205,78 +205,78 @@ flowchart LR
 
 ## 二、调用栈
 
-> 调用栈图保留 ASCII 文本风格（开发者熟悉栈格式，mermaid 不便表达调用层）。
+> 调用栈图以 mermaid 流程图呈现（节点含文件:行号标注），支持缩放/拖动查看。
 
 ## 启动流程
 
-```
-cmd/server/main.go:41 main()
-├─ flag.Parse + loadDevConfig(dev.yaml)       main.go:49-52     ← 开发配置加载
-├─ logging.Init(Config{Debug,Output,Hub})     main.go:63        ← 自定义彩色日志初始化
-├─ slog.SetDefault(slog.New(Handler))         main.go:75        ← slog 桥接（旧调用自动走新系统）
-├─ postgres.NewPostgresClient(WithHost...)     main.go:98        ← infrastructure/postgres/client.go
-├─ redis.NewRedisSentinelClient(WithAddr...)   main.go:111       ← infrastructure/redis/client.go (实为单节点)
-├─ core.Init(ctx,db,redis)                     main.go:122       ← internal/core/core.go
-│   ├─ AutoMigrate(db)                         core.go:23        ← 注册 31 张表
-│   ├─ cache.NewCache(redisClient, $REDIS_PREFIX) core.go:97     ← "juan:" 前缀
-│   ├─ dao.NewBundle(db)                        core.go:105      ← internal/core/dao/dao.go (28 个 DAO)
-│   ├─ acl.NewACL(bundle.ACL)                  core.go:110      ← internal/core/acl/acl.go
-│   └─ InitAdminUser(ctx, UserDAO)             core.go:113      ← core.go (无 admin 时建 admin/Admin123 bcrypt)
-├─ middleware.JWTSecret = []byte($JWT_SECRET)  main.go:129-131
-├─ loadAdapterConfig(ctx, DAO)                 main.go:133      ← (DB 加载，回退 env)
-├─ adapter.New(cfg) + Start(ctx)               main.go:134-142  ← internal/adapter/adapter.go
-├─ loadWebhookConfig / NewWebhookAdapter / Start main.go:146-162 ← internal/adapter/webhook.go
-├─ agent.NewHagoCenter() / Init / Start         main.go:166-185  ← internal/agent/agent.go (含 Eino ADK buildEinoAgent)
-├─ pluggin.NewPluginEngine("data/pluggins",...) main.go:189     ← internal/pluggin/pluggin.go
-│   └─ pluginEngine.LoadAll()                   main.go:199     ← (ensureEmbeddedAssets + 逐目录 Load)
-├─ service.New(...); 注入 ProviderGroup/MCP/... main.go:216-230 ← internal/api/service/root.go
-├─ loadT2IFromDB / loadSandboxFromDB            main.go:226-227  ← (DB 配置 → t2i/sandbox.NewClient)
-├─ svc.OnUpdateT2I/OnUpdateSandbox 回调         main.go:228-229  ← 热注入 HagoCenter.T2IClient/SandboxClient
-├─ web.EnsureDir($WEB_DIR)                      main.go:237      ← internal/web/web.go
-├─ engine.New(addr, webDir, svc)               main.go:241      ← internal/api/engine/engine.go (h.NoRoute=SPAHandler)
-└─ go webEngine.Run() / wait ctx                main.go:248-263
+```mermaid
+flowchart TD
+  M["main()<br/>main.go:41"] --> A["flag.Parse + loadDevConfig(dev.yaml)<br/>main.go:49-52 ← 开发配置加载"]
+  M --> B["logging.Init(Config{Debug,Output,Hub})<br/>main.go:63 ← 彩色日志初始化"]
+  M --> C["slog.SetDefault(slog.New(Handler))<br/>main.go:75 ← slog 桥接"]
+  M --> D["postgres.NewPostgresClient(WithHost...)<br/>main.go:98"]
+  M --> E["redis.NewRedisSentinelClient(WithAddr...)<br/>main.go:111 (实为单节点)"]
+  M --> F["core.Init(ctx, db, redis)<br/>main.go:122"]
+  F --> F1["AutoMigrate(db)<br/>core.go:23 ← 31 张表"]
+  F --> F2["cache.NewCache(redisClient, $REDIS_PREFIX)<br/>core.go:97 ← juan: 前缀"]
+  F --> F3["dao.NewBundle(db)<br/>core.go:105 ← 28 个 DAO"]
+  F --> F4["acl.NewACL(bundle.ACL)<br/>core.go:110"]
+  F --> F5["InitAdminUser(ctx, UserDAO)<br/>core.go:113 ← admin/Admin123 bcrypt"]
+  M --> G["middleware.JWTSecret = []byte($JWT_SECRET)<br/>main.go:129-131"]
+  M --> H["loadAdapterConfig(ctx, DAO)<br/>main.go:133 ← DB 加载, 回退 env"]
+  M --> I["adapter.New(cfg) + Start(ctx)<br/>main.go:134-142"]
+  M --> J["loadWebhookConfig / NewWebhookAdapter / Start<br/>main.go:146-162"]
+  M --> K["agent.NewHagoCenter() / Init / Start<br/>main.go:166-185 ← 含 Eino ADK buildEinoAgent"]
+  M --> L["pluggin.NewPluginEngine(data/pluggins, ...)<br/>main.go:189"]
+  L --> L1["pluginEngine.LoadAll()<br/>main.go:199 ← ensureEmbeddedAssets + 逐目录 Load"]
+  M --> N["service.New(...) 注入 ProviderGroup/MCP/...<br/>main.go:216-230"]
+  M --> O["loadT2IFromDB / loadSandboxFromDB<br/>main.go:226-227 ← DB 配置 → NewClient"]
+  M --> P["svc.OnUpdateT2I/OnUpdateSandbox 回调<br/>main.go:228-229 ← 热注入 HagoCenter/Service"]
+  M --> Q["web.EnsureDir($WEB_DIR)<br/>main.go:237"]
+  M --> R["engine.New(addr, webDir, svc)<br/>main.go:241 ← h.NoRoute=SPAHandler"]
+  M --> S["go webEngine.Run() / wait ctx<br/>main.go:248-263"]
 ```
 
 ## 优雅退出（`cmd/server/main.go:287 shutdown`）
 
-```
-shutdown(adapterProv, webhookAdapter, hago, webEngine, pluginEngine)  main.go:287
-├─ hago.Stop()                                    main.go:289   ← agent.go (占位, 仅打日志)
-├─ webhookAdapter.Stop(ctx 5s)                    main.go:290   ← webhook.go (3s graceful)
-├─ adapterProv.Stop(ctx 5s)                      main.go:297   ← adapter.go (close events，置 nil 以便重启)
-├─ webEngine.Shutdown(ctx 5s)                     main.go:304   ← 先停 adapter 避免锁竞争
-└─ (pluginEngine: 占位)                           main.go:310
-外层 watchdog：15s 超时强退                       main.go:267-279
+```mermaid
+flowchart TD
+  S["shutdown(adapterProv, webhookAdapter, hago, webEngine, pluginEngine)<br/>main.go:287"] --> H["hago.Stop()<br/>main.go:289 ← 占位, 仅打日志"]
+  S --> W["webhookAdapter.Stop(ctx 5s)<br/>main.go:290 ← 3s graceful"]
+  S --> A["adapterProv.Stop(ctx 5s)<br/>main.go:297 ← close events, 置 nil 以便重启"]
+  S --> E["webEngine.Shutdown(ctx 5s)<br/>main.go:304 ← 先停 adapter 避免锁竞争"]
+  S --> P["(pluginEngine: 占位)<br/>main.go:310"]
+  S -.-> WD["外层 watchdog: 15s 超时强退<br/>main.go:267-279"]
 ```
 
 ## OneBot11 反向 WS 事件接收到解析
 
-```
-ws_conn ──HTTP upgrade──▶ adapter/server.go:190 handleWS
-├─ checkAuth(r)                                 server.go:327   (Bearer token 或 ?access_token=)
-├─ websocket.AcceptServer
-├─ 读握手 {self_id}, register conns[self_id]     server.go:207-228 (新连入会顶掉旧同 self_id)
-└─ readLoop                                      server.go:234
-    ├─ echo 字段 → responses[echo] chan          server.go:242  (API 调用响应)
-    ├─ heartbeat → drop                          server.go:252
-    └─ parseEvent(json)                          server.go:287
-        └─ 根据 PostType 反序列化子事件 → s.events <- ev (非阻塞, drop-on-full)
-                                                    server.go:278-282
+```mermaid
+flowchart TD
+  CONN["ws_conn"] --"HTTP upgrade"--> HW["handleWS<br/>adapter/server.go:190"]
+  HW --> CA["checkAuth(r)<br/>server.go:327<br/>Bearer token 或 ?access_token="]
+  HW --> AC["websocket.AcceptServer"]
+  HW --> HK["读握手 {self_id}, register conns[self_id]<br/>server.go:207-228<br/>新连入顶掉旧同 self_id"]
+  HW --> RL["readLoop<br/>server.go:234"]
+  RL --> ECHO["echo 字段 → responses[echo] chan<br/>server.go:242 (API 调用响应)"]
+  RL --> HB["heartbeat → drop<br/>server.go:252"]
+  RL --> PE["parseEvent(json)<br/>server.go:287"]
+  PE --> EV["按 PostType 反序列化子事件<br/>→ s.events <- ev (非阻塞, drop-on-full)<br/>server.go:278-282"]
 ```
 
 触发链路：`Adapter.events` ← `wsServer.events` ← `readLoop`。事件入口 `Adapter.Events()` (`adapter.go:124`)。
 
 ## OneBot11 API 调用（Agent 工具 / 插件 → WS）
 
-```
-Adapter.SendPrivateMsg(uid, msg)                 api.go:15
-└─ call("send_msg", {user_type:"private",...})   api.go:208
-   └─ server.callAPI(action, params)             server.go:138
-      ├─ conn = selfID() 取首连                   server.go:139
-      ├─ echo = atomic.AddUint64(&seq)
-      ├─ responses[echo] = make(chan *APIResponse, 1)
-      ├─ conn.WriteJSON(APIRequest{Action,Params,Echo})
-      └─ select { ch → parse; 10s timeout; <-ctx }
+```mermaid
+flowchart TD
+  SM["Adapter.SendPrivateMsg(uid, msg)<br/>api.go:15"] --> C1["call(send_msg, {user_type:private, ...})<br/>api.go:208"]
+  C1 --> C2["server.callAPI(action, params)<br/>server.go:138"]
+  C2 --> N1["conn = selfID() 取首连<br/>server.go:139"]
+  C2 --> N2["echo = atomic.AddUint64(&seq)"]
+  C2 --> N3["responses[echo] = make(chan *APIResponse, 1)"]
+  C2 --> N4["conn.WriteJSON(APIRequest{Action,Params,Echo})"]
+  C2 --> N5["select { ch → parse; 10s timeout; <-ctx }<br/>server.go:139"]
 ```
 
 `normalizeMessage`（`api.go:324`）兼容 string / `Segment` / `[]Segment` / `*MessageBuilder`，含 CQ 码时重新解析。
@@ -301,138 +301,122 @@ runEventLoop                                     agent/event.go:39
 
 ### processEvent（三阶段架构）
 
-```
-processEvent 三阶段                                  event.go:81
-├─ Phase 1: PluginEngine.Dispatch(ev)                event.go:83-89
-│   result.Consumed=true → return (插件拦截，不入 Agent)
-│   ev = result.Event (插件可修改事件)
-├─ Phase 2: 仅 message 事件继续                     event.go:90-92
-│   PostType!="message" || Message==nil → return
-├─ Phase 3: 回复策略检查                             event.go:94-103
-│   skip_reply 标记时跳过检查
-│   getReplySettings(ctx) → checkReplyStrategyFast 廉价检查
-│   never_reply → skip
-│   at_only → 仅 isAtSelf 通过
-│   relevance → 延迟到 dispatchToAgent 后 filterRelevant 批量判断
-│   always → 通过
-└─ dispatchToAgent(ctx, ev, rs)                      event.go:104
-    goroutine + ConcurrencyManager.Acquire(chatAreaID)
-    → handleMessage(ctx, ev, chatArea, rs)
-    → ConcurrencyManager.Release(chatAreaID)
+```mermaid
+flowchart TD
+  PE["processEvent 三阶段<br/>event.go:81"] --> P1["Phase 1: PluginEngine.Dispatch(ev)<br/>event.go:83-89"]
+  P1 -->|consumed=true| RET1["return (插件拦截, 不入 Agent)"]
+  P1 -->|ev = result.Event| P2["Phase 2: 仅 message 事件继续<br/>event.go:90-92"]
+  P2 -->|PostType!=message 或 Message==nil| RET2["return"]
+  P2 --> P3["Phase 3: 回复策略检查<br/>event.go:94-103"]
+  P3 -->|skip_reply 标记| P3S["跳过检查"]
+  P3 -->|getReplySettings → checkReplyStrategyFast| RS{策略}
+  RS -->|never_reply| SKIP["skip"]
+  RS -->|at_only| AT["仅 isAtSelf 通过"]
+  RS -->|relevance| RL["延迟到 dispatchToAgent 后<br/>filterRelevant 批量判断"]
+  RS -->|always| OK["通过"]
+  P3S --> D
+  AT --> D["dispatchToAgent(ctx, ev, rs)<br/>event.go:104"]
+  RL --> D
+  OK --> D
+  SKIP --> RET3["return"]
+  D --> G["goroutine + ConcurrencyManager.Acquire(chatAreaID)"]
+  G --> HM["handleMessage(ctx, ev, chatArea, rs)"]
+  HM --> R["ConcurrencyManager.Release(chatAreaID)"]
 ```
 
 ### handleMessage（Eino ADK 对话主流程）
 
-```
-handleMessage                                       event.go:311
-├─ msg = 批次最后一条; chatArea 缺失时 getChatArea   event.go:315-324
-├─ 聊天黑名单: isAdmin || ACL.CheckChat → 丢弃       event.go:327-341
-│   (命中黑名单直接丢弃, 不进入 Agent, 不写回 tool msg)
-├─ h.Session.GetOrCreate(chatArea.ID)               event.go:344
-├─ 收集批内用户消息(带发言人标识) + Skills.Match      event.go:351-380
-├─ Loops.Register 活跃循环 (Web 监控页展示)         event.go:388-397
-├─ longTermMems = h.Memory.GetLongTermMemory          event.go:402
-├─ skillMem = h.Memory.GetSkillMemory()              event.go:413
-├─ systemCtx = h.Prompt.BuildFullContext(longTermMem, skillMem)
-│   (工具感知不拼入提示词, 由 Eino 每次模型调用自动携带 tools 参数)
-├─ buildKnowledgeContext(批内消息): LRU/DB 模糊匹配知识库, 命中拼入 systemCtx
-│   (关键词命中 + 内容 ILIKE 兜底, 限 5 条, LRU 50 条缓存)
-│                                                   event.go:415
-├─ buildStickerContext: 表情包全部标签 + 「常用」标签下的表情(ID/描述) 拼入指令
-│   (Agent 优先按标签取表情 / 直接用常用表情 ID 发 send_sticker)          event.go:sticker.go
-├─ einoMsgs 组装: system → sessionCtx → [Skill:] → 短期记忆 → user
-│                                                   event.go:418-437
-├─ AddShortTermMessage + Session.AppendRecord (Postgres 解耦)
-│                                                   event.go:440-447
-├─ 读 ReplyStrategy: skipSilenceCheck / agentLite    event.go:450-465
-│   + WithMsgSessionCtx + DeferredSendQueue 入队       event.go:468-483
-├─ adk.NewRunner(ctx).Run(ctx, einoMsgs)             event.go:491-520
-│   Eino ADK ReAct 循环（工具调用同步完成, 累计每轮 token）
-├─ 任务期间排队的发送消息 deferredSends.Flush 统一发送
-│                                                   event.go:545
-├─ 非空内容且未投递当前会话:
-│   群聊检查 isSilenceResponse("__NO_REPLY__" 或静默短语) → drop
-│   sendReply + recordChat("assistant",...) + Memory.AddShortTermMessage
-│                                                   event.go:571-584
-└─ Session.RecordTokenUsage (会话总账 + 每日统计)    event.go:526-530
+```mermaid
+flowchart TD
+  HM["handleMessage<br/>event.go:311"] --> M1["msg = 批次最后一条<br/>chatArea 缺失时 getChatArea<br/>event.go:315-324"]
+  M1 --> M2{"聊天黑名单?<br/>isAdmin \|\| ACL.CheckChat"}
+  M2 -->|命中| DROP["丢弃 (不进入 Agent, 不写回 tool msg)<br/>event.go:327-341"]
+  M2 -->|未命中| M3["h.Session.GetOrCreate(chatArea.ID)<br/>event.go:344"]
+  M3 --> M4["收集批内用户消息(带发言人标识) + Skills.Match<br/>event.go:351-380"]
+  M4 --> M5["Loops.Register 活跃循环 (Web 监控页展示)<br/>event.go:388-397"]
+  M5 --> M6["longTermMems / skillMem 读取<br/>event.go:402-413"]
+  M6 --> M7["systemCtx = Prompt.BuildFullContext<br/>工具感知不拼入提示词 (Eino tools 参数)"]
+  M7 --> M8["buildKnowledgeContext: LRU/DB 模糊匹配, 命中拼入<br/>关键词命中 + ILIKE 兜底, 限 5 条, LRU 50 缓存<br/>event.go:415"]
+  M8 --> M9["buildStickerContext: 表情包标签 + 常用表情拼入指令"]
+  M9 --> M10["einoMsgs 组装: system → sessionCtx → Skill: → 短期记忆 → user<br/>event.go:418-437"]
+  M10 --> M11["AddShortTermMessage + Session.AppendRecord (Postgres 解耦)<br/>event.go:440-447"]
+  M11 --> M12["读 ReplyStrategy + WithMsgSessionCtx + DeferredSendQueue 入队<br/>event.go:450-483"]
+  M12 --> M13["adk.NewRunner(ctx).Run(ctx, einoMsgs)<br/>event.go:491-520<br/>Eino ADK ReAct 循环 (工具同步完成, 累计 token)"]
+  M13 --> M14["deferredSends.Flush 统一发送<br/>event.go:545"]
+  M14 --> M15{"非空内容且未投递当前会话?"}
+  M15 -->|否| M16["Session.RecordTokenUsage<br/>event.go:526-530"]
+  M15 -->|是| M17["群聊检查 isSilenceResponse 静默短语 → drop<br/>sendReply + recordChat + AddShortTermMessage<br/>event.go:571-584"]
+  M17 --> M16
 ```
 
 ### 工具调用（Eino ADK ReAct 循环内同步执行）
 
 工具调用完全由 Eino ADK ChatModelAgent 的 ReAct 循环管理，所有工具同步执行：
 
-```
-Eino ADK ReAct 循环 (MaxIterations=20)
-└─ for each iteration:
-   ├─ LLM.Chat(messages, tools) → resp
-   ├─ resp 无 ToolCalls → 返回文本回复，循环结束
-   └─ resp 有 ToolCalls:
-      ├─ 工具来源: buildEinoAgent 时合并的 Eino 工具列表
-      │   (builtin 在前 + MCP 追加在后, 见 tool/eino_tool.go::BuildEinoTools)
-      ├─ 由 JuanNiangMiddleware.WrapInvokableToolCall 包装后同步执行
-      │   (记录日志 + 更新 LoopTracker 当前工具 + 仅管理员工具校验)
-      ├─ 执行结果回填 tool-role msg → 继续下一轮 ReAct 迭代
-      └─ 权限: ACL 仅聊天黑名单(handleMessage 阶段); 标记 admin_only 的工具
-         (ToolConfig 表, Tools 页可逐工具开关)在 WrapInvokableToolCall 强制校验
-         调用者为 Admins 列表内, 否则拒绝执行(防提示词注入); 内置群管理工具
-         首次启动 seed 默认开启
+```mermaid
+flowchart TD
+  LOOP["Eino ADK ReAct 循环<br/>(MaxIterations=20)"] --> ITER["for each iteration"]
+  ITER --> CHAT["LLM.Chat(messages, tools) → resp"]
+  CHAT --> HAS{"resp 有 ToolCalls?"}
+  HAS -->|无| DONE["返回文本回复, 循环结束"]
+  HAS -->|有| SRC["工具来源: buildEinoAgent 合并的 Eino 工具列表<br/>builtin 在前 + MCP 追加在后<br/>tool/eino_tool.go::BuildEinoTools"]
+  SRC --> WRAP["JuanNiangMiddleware.WrapInvokableToolCall 同步执行<br/>记录日志 + LoopTracker 当前工具 + 仅管理员工具校验"]
+  WRAP --> AUTH{"admin_only 工具?"}
+  AUTH -->|非管理员| REJ["拒绝执行 (防提示词注入)"]
+  AUTH -->|管理员或非受限| EXEC["执行工具"]
+  EXEC --> FB["执行结果回填 tool-role msg"]
+  FB --> ITER
+  REJ --> FB
 ```
 
 > **已移除**：BgTaskExecutor 和 DrainerAgent 已完全移除。所有工具调用（包括长时间运行的操作）均在 Eino ADK 的 ReAct 循环内同步完成。
 
 ## CronJob 调度
 
-```
-CronJobManager.Run                                 cronjob/manager.go:46
-├─ reloadAll: ListActive → cron.AddFunc(expr, makeJobFunc(job))
-│   makeJobFunc(job):
-│     触发时 DAO.CronJob.UpdateLastRun(now)
-│     构造 adapter.Event{PostType:"cronjob", IsCronJob:true,
-│       CronJobPayload, CronJobPluginIDs, Time:now}
-│     可选 Message: 由 job.Message/MessageType/TargetID 组装
-│       (仅作为插件 on_cronjob 的 raw_message 等上下文, 不进 LLM)
-│     非阻塞 send to eventChan (= HagoCenter.CronJobEvents)
-│     manager.go:98-136
-├─ cron.Start()
-└─ <-ctx → cron.Stop()
-
-API 侧变更: AddCronJob/UpdateCronJob/DeleteCronJob/ToggleCronJob
-   → svc.CronJobManager.Reload() 同步调度器      service.go:1733/1768/1808/1822
+```mermaid
+flowchart TD
+  RUN["CronJobManager.Run<br/>cronjob/manager.go:46"] --> RL["reloadAll: ListActive → cron.AddFunc(expr, makeJobFunc(job))"]
+  RL --> TRIG["到期触发 makeJobFunc(job)"]
+  TRIG --> U1["DAO.CronJob.UpdateLastRun(now)<br/>manager.go:98-136"]
+  TRIG --> U2["构造 adapter.Event{PostType:cronjob,<br/>CronJobPayload, CronJobPluginIDs, Time}"]
+  TRIG --> U3["可选 Message: job.Message/MessageType/TargetID 组装<br/>(仅作 on_cronjob 的 raw_message 上下文, 不进 LLM)"]
+  TRIG --> U4["非阻塞 send → eventChan (= HagoCenter.CronJobEvents)"]
+  RUN --> ST["cron.Start()"]
+  RUN --> WD["<-ctx → cron.Stop()"]
 ```
 
 ## Web API 请求 → handler
 
-```
-Hertz server (engine.go:18)
-└─ middleware.Recovery → middleware.CORS → router.RegisterRoutes
-   └─ /api/v1 组: 中间件 JWTAuth? (各路由按需)
-      └─ svc.<Handler> (121 个, 内部走 DTO transfer + DAO)
-        成功 → dto.GenFinalResponse(OK, data) → 200
-        失败 → GenFinalResponse(<错误码>, nil) → 200
-未命中路由:
-   /api/* → web.SPAHandler: 即 404 信封 {status:40400,info:"资源不存在"}
-   其它   → serve 文件 / 回退 index.html / 引导页
+```mermaid
+flowchart TD
+  SRV["Hertz server<br/>engine.go:18"] --> MW["middleware.Recovery → middleware.CORS → router.RegisterRoutes"]
+  MW --> V1["/api/v1 组: 中间件 JWTAuth? (各路由按需)"]
+  V1 --> H["svc.Handler (121 个, 内部走 DTO transfer + DAO)"]
+  H -->|成功| OK["dto.GenFinalResponse(OK, data) → 200"]
+  H -->|失败| ERR["GenFinalResponse(错误码, nil) → 200"]
+  SRV --> NR["未命中路由"]
+  NR --> A1["/api/* → web.SPAHandler: 404 信封<br/>{status:40400, info:资源不存在}"]
+  NR --> A2["其它 → serve 文件 / 回退 index.html / 引导页"]
 ```
 
 ## 日志系统（自定义彩色日志）
 
 基于 `github.com/fatih/color` 的自定义日志系统，替代 `log/slog`。功能：彩色输出、JSON 自动格式化、WARN+ 调用栈、模块日志器、GORM SQL 日志集成。
 
+```mermaid
+flowchart TD
+  LOG["log.Info(msg, k, v) → Logger.log()<br/>logging/logger.go:182"] --> KV["kvsToMap(kvs) → attrs map"]
+  LOG --> ST["level >= WARN → captureStack(skip) 捕获调用栈"]
+  KV --> EN["Entry{Time, Level, Module, Message, Attrs, Stack}"]
+  ST --> EN
+  EN --> IO["writeStdio(entry, level)<br/>logging/logger.go:251"]
+  IO --> COL["彩色输出: 时间戳(灰) + 级别(绿/黄/红) + 模块名(蓝)<br/>+ 消息(JSON 自动格式化 cyan) + 元数据(白 bold)<br/>+ 调用栈(WARN+ 级别, 红)"]
+  EN --> HUB["hub.Push(entry)<br/>logging/hub.go:41<br/>环形 buffer[250] 写入 + 副本遍历 subscribers 非阻塞发送"]
+  LOG -.-> SL["slog 兼容: Handler 桥接器路由到新系统<br/>logging/handler.go"]
+  LOG -.-> GM["GORM 集成: GormLogger 路由 SQL 日志<br/>infrastructure/postgres/gorm_logger.go"]
 ```
-log.Info("msg", k, v)  → Logger.log()              logging/logger.go:182
-├─ kvsToMap(kvs) → attrs map
-├─ level >= WARN → captureStack(skip) 捕获调用栈
-├─ Entry{Time, Level, Module, Message, Attrs, Stack}
-├─ writeStdio(entry, level)                          logging/logger.go:251
-│   彩色输出: 时间戳(灰) + 级别(绿/黄/红) + 模块名(蓝)
-│   + 消息(JSON 自动格式化着 cyan 色) + 元数据(key=白 bold)
-│   + 调用栈(WARN+ 级别, 红)
-└─ hub.Push(entry)                                   logging/hub.go:41
-    环形 buffer[250] 写入 + 副本遍历 subscribers 非阻塞发送
 
-slog 兼容: Handler 桥接器将 slog 调用路由到新系统 (logging/handler.go)
-GORM 集成: GormLogger 将 SQL 日志路由到 logging 模块 (infrastructure/postgres/gorm_logger.go)
-
+```text
 GET /api/v1/logs/stream → svc.StreamLogs          service.go:1634
 ├─ sse.NewWriter(c)
 ├─ 阶段1: LogHub.Recent() 250 条按序 WriteEvent("log")
@@ -667,36 +651,32 @@ stateDiagram-v2
 
 代码位置：
 
-```
-LoadAll (启动调用)                              pluggin.go:207
-    ├─ ensureEmbeddedAssets: 写 sdk/jn.lua + system/{pluggin.yaml,main.lua}
-    │   每次 startup 强制覆盖 (保证镜像升级后插件一致)         pluggin.go:1554
-    ├─ 读 basePath (默认 "data/pluggins") 目录
-    ├─ 跳过 sdk/ 子目录
-    ├─ 逐插件目录: 读取 manifest
-    │     非系统插件且 Enabled==false → 跳过 (不加载)
-    │     Load(name)                           pluggin.go:239
-    └─ (任一插件加载失败仅 slog.Error, 不阻塞其他)
-
-Load(name)                                       pluggin.go:239
-    ├─ mutex 持锁; 拒绝重复加载
-    ├─ 读 manifest (pluggin.yaml)
-    ├─ PPID 为空 → 生成 UUID 并写回 pluggin.yaml          pluggin.go:254
-    ├─ lua.NewState
-    ├─ injectSDK: <basePath>/sdk/?.lua 追加 package.path (require "jn" 可用)
-    ├─ injectBaseAPI: 按 permissions 注入全局表 (log/json/onebot11/http/database/cache/t2i/sandbox/agent)
-    ├─ injectCommandAPI: 注入 __jn_internal.register_command
-    ├─ L.DoFile(<entry> ; 默认 main.lua) → run
-    └─ 存 LoadedPlugin
-
-Unload(name)                                     pluggin.go:281
-    ├─ 系统插件拒绝 (返回 err)
-    ├─ commands.UnregisterPlugin(name) 清理该插件所有命令
-    └─ LState.Close()
-
-Reload(name) = Unload + Load                     pluggin.go:301
-SetEnabled(name, bool) 重写 pluggin.yaml 的 enabled 字段    pluggin.go:1439
-List() / ListMaps() (后者合并 disk 上未加载的插件, 供 Web API)  pluggin.go:308/321
+```mermaid
+flowchart TD
+  LA["LoadAll (启动调用)<br/>pluggin.go:207"] --> EA["ensureEmbeddedAssets: 写 sdk/jn.lua + system/{pluggin.yaml,main.lua}<br/>每次 startup 强制覆盖<br/>pluggin.go:1554"]
+  EA --> RD["读 basePath (默认 data/pluggins) 目录"]
+  RD --> SK["跳过 sdk/ 子目录"]
+  SK --> IT["逐插件目录: 读取 manifest"]
+  IT --> EN{"非系统插件且 Enabled==false?"}
+  EN -->|是| SKIP["跳过 (不加载)"]
+  EN -->|否| LD["Load(name)<br/>pluggin.go:239"]
+  LD --> L1["mutex 持锁; 拒绝重复加载"]
+  L1 --> L2["读 manifest (pluggin.yaml)"]
+  L2 --> L3["PPID 为空 → 生成 UUID 并写回<br/>pluggin.go:254"]
+  L3 --> L4["lua.NewState"]
+  L4 --> L5["injectSDK: sdk/?.lua 追加 package.path<br/>(require jn 可用)"]
+  L5 --> L6["injectBaseAPI: 按 permissions 注入全局表"]
+  L6 --> L7["injectCommandAPI: 注入 register_command"]
+  L7 --> L8["L.DoFile(entry; 默认 main.lua) → run"]
+  L8 --> L9["存 LoadedPlugin"]
+  LD -.->|失败| ERR["仅 slog.Error, 不阻塞其他插件"]
+  L9 --> UN["Unload(name)<br/>pluggin.go:281"]
+  UN --> U1["系统插件拒绝 (返回 err)"]
+  UN --> U2["commands.UnregisterPlugin(name) 清理命令"]
+  UN --> U3["LState.Close()"]
+  L9 -.-> RL["Reload(name) = Unload + Load<br/>pluggin.go:301"]
+  L9 -.-> SE["SetEnabled(name, bool) 重写 pluggin.yaml enabled<br/>pluggin.go:1439"]
+  L9 -.-> LS["List() / ListMaps()<br/>pluggin.go:308/321"]
 ```
 
 系统插件三层守卫（`Manifest.System` + `PluginEngine.IsSystem()` + Service 层 Toggle/Delete），确保 `system` 插件不可删/停。

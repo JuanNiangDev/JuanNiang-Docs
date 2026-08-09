@@ -115,7 +115,7 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 
 ## T2I
 
-> Text-to-Image：HTML → 渲染为图片的服务。可对接 [RavnaServer/T2I](https://github.com/...) 等实现。
+> Text-to-Image：HTML → 渲染为图片的服务。依赖 [astrbot-t2i-service](https://github.com/AstrBotDevs/astrbot-t2i-service)。
 
 ### 客户端
 
@@ -134,17 +134,16 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 
 ### 接入指南
 
-1. 起一个 T2I 实现（HTTP 服务，提供 `/text2img/generate` 与 `/text2img/data/:id`）
-   - 官方推荐：[astrbot-t2i-service](https://github.com/AstrBotDevs/astrbot-t2i-service)，Docker 一键启动：
-     ```bash
-     docker run -itd -p 8999:8999 soulter/astrbot-t2i-service:latest
-     ```
+1. 部署 [astrbot-t2i-service](https://github.com/AstrBotDevs/astrbot-t2i-service)（提供 `/text2img/generate` 与 `/text2img/data/:id`），Docker 一键启动：
+   ```bash
+   docker run -itd -p 8999:8999 soulter/astrbot-t2i-service:latest
+   ```
 2. Web 面板"T2I"页填 `base_url`（如 `http://<服务器>:8999`）、`timeout`、勾"启用"
 3. Agent 内置工具 `text_to_image`（长任务，`builtin.go` 自动注册，ReAct 循环内同步执行）、Lua 插件 `t2i.generate/generate_url`（同步）与 `t2i.generate_async/generate_url_async`（异步，完成回调 `on_t2i_response`，不阻塞事件循环）
 
 ## Sandbox
 
-> 代码沙箱：执行 shell / Python / 文件操作。
+> 代码沙箱：执行 shell / Python / 文件操作。官方唯一接入实现：[shipyard-neo](https://github.com/AstrBotDevs/shipyard-neo)。
 
 ### 客户端
 
@@ -167,8 +166,7 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 
 ### 接入指南
 
-1. 起一个 Sandbox 实现（HTTP 服务，符合上述接口，建议带 APIKey 鉴权）
-   - 官方推荐：[shipyard-neo](https://github.com/AstrBotDevs/shipyard-neo)（AstrBot 生态的沙箱实现，独立服务部署）
+1. 部署 [shipyard-neo](https://github.com/AstrBotDevs/shipyard-neo)（当前唯一接入实现，接口见上文「客户端」一节，建议带 APIKey 鉴权）
 2. Web 面板"Sandbox"页填 `base_url`、`api_key`、`timeout`、勾"启用"
 3. Agent 内置工具 `command_exec`/`code_exec`/`browser_search`/`create_sandbox`/`list_sandboxes` 与 MCP 工具一样在 Eino ReAct 循环内**同步执行**（无后台调度管道；`IsLongRunning` 仅作元数据标记，不影响执行方式）。Lua 插件 `sandbox.create/exec_shell/exec_python/list/delete`（同步）；耗时执行建议用 `create_async/exec_shell_async/exec_python_async`（异步，完成回调 `on_sandbox_response`，不阻塞事件循环）
 
