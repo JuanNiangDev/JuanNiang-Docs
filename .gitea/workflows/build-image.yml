@@ -25,8 +25,8 @@ jobs:
           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login "${{ secrets.REGISTRY_URL }}" -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
 
           # 构建并推送（不保留本地缓存）
-          docker build --pull --no-cache -t ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME_LOWER }}/juan-dev/juan-docs:latest .
-          docker push ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME_LOWER }}/juan-dev/juan-docs:latest
+          docker build --pull --no-cache -t ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest .
+          docker push ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest
 
           # 清理
-          docker rmi ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME_LOWER }}/juan-dev/juan-docs:latest || true
+          docker rmi ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest || true
