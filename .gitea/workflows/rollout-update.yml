@@ -25,18 +25,18 @@ jobs:
       - name: Docker Build
         shell: sh
         run:
-          docker build --pull --no-cache -t ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME_LOWER }}/juan-dev/juan-docs:latest .
+          docker build --pull --no-cache -t ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest .
 
       - name: Docker Push
         shell: sh
         run: |
           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login "${{ secrets.REGISTRY_URL }}" -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
-          docker push ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME_LOWER }}/juan-dev/juan-docs:latest
+          docker push ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest
 
       - name: Docker Clean
         shell: sh
         run:
-          docker rmi ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_USERNAME_LOWER }}/juan-dev/juan-docs:latest || true
+          docker rmi ${{ secrets.REGISTRY_URL }}/juan-dev/juan-docs:latest || true
   rolloutUpdate:
     runs-on: kubectl-cli
     steps:
