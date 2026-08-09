@@ -2,10 +2,6 @@
 title: 插件开发指南（快速开始）
 ---
 
----
-title: 插件开发指南
----
-
 
 本文档整合 JuanNiang-Neo Lua 插件的开发流程、API 参考与引擎实现细节，是二次开发插件的完整参考。插件系统的架构概览见 [架构文档](../development/architecture.md#四插件系统)。
 

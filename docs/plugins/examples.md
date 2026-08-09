@@ -37,11 +37,13 @@ title: 示例插件
 | `redrock_faq` | `on_message` + 命令 | 关键词问答 + 语料库（19 条闲聊 + 17 条部门问答） |
 | `redrock_special` | `on_message` | 卷娘彩蛋（年龄/身高/体重…随机图片回复） |
 | `redrock_caidanci` | `on_message` + 命令 | 猜单词游戏（Wordle 规则，62 词库） |
-| `redrock_quiz` | 命令 | 红岩知识快问快答（8 题 + SQLite 持久化） |
+| `redrock_caidanci_grade` | 命令 | 分级猜单词小游戏（高考/四级/六级/考研/雅思/托福/GRE 七档难度，Wordle 规则，T2I 渲染棋盘，37151 词条） |
+| `redrock_quiz` | 命令 | 红岩知识快问快答（Postgres KV 表持久化） |
 | `redrock_code` | `on_message` + 命令 | 在线代码运行（Judge0，43 种语言） |
 | `redrock_poke` | `on_notice` | 戳一戳回复（18 条，防连续重复） |
-| `redrock_group_manager` | `on_message` + `on_notice` + 命令 | 群管理：敏感词撤回 / 广告 / 刷屏 / 复读检测 + `/groupstats` |
-| `redrock_cron_msg` | `on_timer_call` | 定时消息（多群，Payload JSON 配置） |
+| `redrock_group_manager` | `on_message` + `on_notice` + 命令 | 群管理：黑/灰/敏感三地带检测（灰色词异步 LLM 审查）+ 三级惩罚 + `/豁免` 系列命令 + `/groupstats` |
+| `redrock_cron_msg` | `on_cronjob` | 定时消息（多群，Payload JSON 配置） |
+| `redrock_fanzha` | 命令 | 开学季反诈提醒（`/反诈提醒` / `/全体反诈提醒`，限流） |
 
 ### 值得借鉴的设计
 
