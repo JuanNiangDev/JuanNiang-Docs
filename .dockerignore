@@ -1,6 +1,5 @@
 # 依赖与构建产物不进入构建上下文（构建阶段需要 docs/src/static/config 等全部源码）
 node_modules
-build
 .docusaurus
 .cache-loader
 
