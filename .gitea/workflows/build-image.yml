@@ -13,6 +13,11 @@ jobs:
         run:
           git clone https://${{ secrets.R_USER }}:${{ secrets.R_PASSWORD }}@git.lan.tuf3i.cc/JuanNiangDev/JuanNiang-Docs.git .
 
+      - name: View current path
+        shell: sh
+        run:
+          ls
+
       - name: Build and push
         shell: sh
         run: |
