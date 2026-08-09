@@ -64,6 +64,28 @@ docusaurus.config.ts         # 站点配置（导航 / 暗色模式 / mermaid / 
 - GitHub Pages 项目站点：将 `docusaurus.config.ts` 中 `baseUrl` 改为 `/<仓库名>/`
 - 部署脚本：`npm run deploy`（需在配置中设置 `organizationName` / `projectName`）
 
+## Docker 打包
+
+仓库自带 `Dockerfile`（多阶段构建：Node 构建 → nginx 托管）与 `nginx.conf`（SPA 路由回退 / gzip / 静态资源缓存 / 健康检查）：
+
+```bash
+# 构建镜像
+cd JuanNiang-Docs
+# 国内网络可加 --build-arg NPM_REGISTRY=https://registry.npmmirror.com 加速
+
+docker build -t juan-docs .
+
+# 运行
+docker run -d --name juan-docs -p 8080:80 juan-docs
+# 访问 http://localhost:8080
+
+# 或 docker compose
+docker run -d --name juan-docs --restart unless-stopped -p 8080:80 \
+  -e TZ=Asia/Shanghai juan-docs
+```
+
+镜像内 nginx 监听 `80` 端口，健康检查地址 `/healthz`（Docker `HEALTHCHECK` 每 30s 探测）。
+
 ## 维护说明
 
 - 新增文档：在 `docs/` 对应目录创建 `.md` 文件，并在 `sidebars.ts` 对应章节注册
