@@ -5,13 +5,13 @@ on:
   push:
     branches: [main]  # 针对 master 的 push 触发
     paths:
-      - 'dist/**'
+      - 'build/**'
   pull_request:
     types:  # 针对 master 的 PR 被 Merge 后触发
       - closed
     branches: [main]
     paths:
-      - 'dist/**'
+      - 'build/**'
 
 jobs:
   buildImage:
