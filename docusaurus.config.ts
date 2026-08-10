@@ -133,6 +133,22 @@ const config: Config = {
     mermaid: true,
   },
 
+  // LLM 友好文档（llmstxt.org 规范）：构建时生成 /llms.txt（链接索引）与 /llms-full.txt（全量内容）。
+  // 同时为每页生成独立 .md 版本，使 llms.txt 中的 .md 链接真实可访问（v2 规范推荐）。
+  plugins: [
+    [
+      'docusaurus-plugin-llms',
+      {
+        generateLLMsTxt: true,
+        generateLLMsFullTxt: true,
+        generateMarkdownFiles: true,
+        preserveDirectoryStructure: true,
+        excludeImports: true,
+        removeDuplicateHeadings: true,
+      },
+    ],
+  ],
+
   // mermaid 图表支持（```mermaid 代码块）+ 本地全文搜索（无外部依赖，支持中文分词）
   themes: [
     '@docusaurus/theme-mermaid',
