@@ -54,6 +54,20 @@ const features = [
   },
 ];
 
+// 首页「技术栈」区块：卷娘核心开发栈
+const techStack = [
+  'Go',
+  'Eino ADK',
+  'OneBot11',
+  'LLM（OpenAI 兼容）',
+  'Vue 3',
+  'Vuetify 3',
+  'Lua（gopher-lua）',
+  'PostgreSQL',
+  'Redis',
+  'Docker Compose',
+];
+
 const chapters = [
   {
     icon: 'mdi:book-open-variant',
@@ -135,6 +149,27 @@ export default function Home(): JSX.Element {
             peelBackHoverPct={30}
             peelBackActivePct={40}
           />
+        </section>
+
+        {/* 项目介绍 + 技术栈 */}
+        <section className={styles.section}>
+          <div className="container">
+            <h2 className={styles.sectionTitle}>项目介绍</h2>
+            <p className={styles.introText}>
+              卷娘（JuanNiang）是红岩网校的吉祥物，也是本项目的名字来源。
+              本仓库为卷娘的文档站，由重庆邮电大学红岩网校工作室开发。
+              卷娘基于 <strong>Go</strong> 编写，通过 <strong>OneBot11</strong> 协议接入 QQ，
+              驱动主流大模型（LLM）实现智能对话，支持 Lua 插件扩展、Web 管理后台与自部署。
+            </p>
+            <h3 className={styles.techTitle}>技术栈</h3>
+            <div className={styles.techStack}>
+              {techStack.map((t) => (
+                <span key={t} className={styles.techChip}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* 特性 */}
