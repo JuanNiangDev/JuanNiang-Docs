@@ -13,6 +13,8 @@
   user-select: none;
   -webkit-user-select: none;
   cursor: grab;
+  /* 稳定尺寸盒：裁剪超宽卡片，消除 autoplay 动画引发的 CLS */
+  overflow: hidden;
 }
 
 .depthCarousel:active {
@@ -29,6 +31,8 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
+  /* 稳定尺寸盒：裁剪超宽卡片，避免 autoplay 动画引发 CLS */
+  overflow: hidden;
 }
 
 .depthCarousel__card {
