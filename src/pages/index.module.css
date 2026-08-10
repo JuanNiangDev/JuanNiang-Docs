@@ -274,12 +274,6 @@ html[data-theme='dark'] .heroMask {
   margin: 0;
 }
 
-.screenshot {
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid var(--ifm-color-emphasis-200);
-}
-
 @media (max-width: 996px) {
   .heroTitle {
     font-size: 2.2rem;

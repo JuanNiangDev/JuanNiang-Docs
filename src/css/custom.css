@@ -61,3 +61,25 @@
   height: auto;
   margin: 0 auto;
 }
+
+/* 无障碍：正文文本块内的链接加下划线并留足点击区域（link-in-text-block / target-size） */
+.theme-doc-markdown a,
+.markdown a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.theme-doc-markdown a:hover,
+.markdown a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* 正文块内联行内链接扩大点击命中区域 */
+.theme-doc-markdown p a,
+.theme-doc-markdown li a,
+.markdown p a,
+.markdown li a {
+  display: inline-block;
+  padding: 0 1px;
+}
