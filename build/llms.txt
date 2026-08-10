@@ -1,0 +1,43 @@
+# JuanNiang-Neo
+
+> 卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。
+
+This file contains links to documentation sections following the llmstxt.org standard.
+
+## Table of Contents
+
+- [JuanNiang-Neo 部署与调试指南](https://docs.juan.team/docs/deployment.md): 本文档面向运维和开发者，覆盖部署模式、环境变量、构建流程、健康检查、日志排查和常见故障处理。
+- [Web API：Agent 配置](https://docs.juan.team/docs/development/api/agent.md): LLM Provider (text/image/embedding) CRUD。同类型只能一个 Active，激活时自动停用同类型其他 Provider。
+- [Web API：功能模块](https://docs.juan.team/docs/development/api/features.md): Lua 插件管理。插件通过 ZIP 上传，自动解压到 `data/pluggins/<name>/`。
+- [Web API：适配器与会话](https://docs.juan.team/docs/development/api/infra.md): OneBot11 反向 WebSocket 适配器状态查询与配置更新。
+- [Web API：接口约定与系统状态](https://docs.juan.team/docs/development/api/intro.md): **Base URL:** `http://localhost:8090/api/v1`
+- [架构与设计（项目细节）](https://docs.juan.team/docs/development/architecture.md): 本文档整合 JuanNiang-Neo 的架构、调用栈、EventLoop 与插件系统，作为二次开发与运维理解的核心参考。
+- [JuanNiang-Neo 项目开发文档](https://docs.juan.team/docs/development.md): 本文档面向二次开发者，整合原 `docs/implementation.md`、`docs/dev/guidance.md`、`docs/dev/provider.md` 中对开发最有价值的内容，按"该读什么、该改什么、不该动什么"组织。代码为准；与 `docs/` 冲突时以代码为准。
+- [外部服务接入细节](https://docs.juan.team/docs/development/external-services.md): 本文档集中说明 JuanNiang-Neo 如何接入外部服务：LLM Provider、MCP、Postgres、Redis、T2I、Sandbox。每节给出：包路径、客户端构造方式、运行时热更新机制、可配置项与启停语义，以及与 HagoCenter / Service 插件的关系。
+- [多协议 LLM Provider 适配实施方案](https://docs.juan.team/docs/development/llm-provider.md): > 状态：待评审（未实施）
+- [本地开发环境](https://docs.juan.team/docs/development/setup.md): 本文面向想在本地搭建开发环境、修改 JuanNiang-Neo 主项目的开发者。
+- [Webhook 与 CronJob 使用文档](https://docs.juan.team/docs/development/webhook-cronjob.md): 本文档说明 JuanNiang-Neo 的两种"主动消息"机制。
+- [注册 GitHub 账号](https://docs.juan.team/docs/git/account.md): 1. 打开浏览器，访问 https://github.com
+- [附录：邮件列表项目与学习资源](https://docs.juan.team/docs/git/appendix.md): **不是所有项目都用 GitHub**。Linux 内核、Git 本身、PostgreSQL、FreeBSD、QEMU、U-Boot、coreutils、BusyBox、GCC、GDB、Binutils 等重量级开源项目**不用 GitHub PR**，而是用**邮件列表（mailing li...
+- [速查表与常见报错](https://docs.juan.team/docs/git/cheatsheet.md): | 情境 | 命令 |
+- [三平台安装并配置 git](https://docs.juan.team/docs/git/install.md): 1. 打开浏览器，访问官网下载页：https://git-scm.com/download/win
+- [直观理解](https://docs.juan.team/docs/git/intro.md): > 写给：从零开始接触版本控制、想搞懂 git 和 github 是什么、并能在 GitHub 上托管项目和协作的同学。
+- [提交 Pull Request 的完整流程](https://docs.juan.team/docs/git/pull-request.md): **Pull Request（简称 PR，"拉取请求"）** 是 GitHub 协作的核心机制。你改了别人的代码，发一个 PR 等于说："我改了这些，请你拉过来看看要不要合进你的主线。"
+- [创建仓库并本地推送维护](https://docs.juan.team/docs/git/repository.md): 1. 登录 GitHub，右上角 **+** → **New repository**（新建仓库）
+- [项目简介](https://docs.juan.team/docs/intro.md): > 复活吧卷娘 — 基于 OneBot11 协议的 LLM QQ 聊天 Agent
+- [语法基础](https://docs.juan.team/docs/lua/basics.md): ```lua
+- [常见坑与最佳实践](https://docs.juan.team/docs/lua/best-practices.md): > 最后一章。把前面学的串起来，集中讲卷娘 Lua 插件开发里最容易踩的坑和推荐的写法。学完这一章，你就能读懂 `plugins/redrock_*` 的真实代码了。
+- [控制流](https://docs.juan.team/docs/lua/control-flow.md): ```lua
+- [函数与闭包](https://docs.juan.team/docs/lua/functions.md): 函数是 Lua 里的一等公民。有两种写法，完全等价：
+- [Lua 是什么](https://docs.juan.team/docs/lua/intro.md): > 写给：想给卷娘写插件、但还没写过 Lua，或者只写过 Python/JavaScript 想快速上手 Lua 的同学。
+- [元表与面向对象](https://docs.juan.team/docs/lua/metatables.md): > 元表（metatable）是 Lua 最强大也最易懵的特性。它给表配了"行为振铃"——当这个表被做某些操作时（相加、索引、调用、拼接……），会触发元表里对应的**元方法**。卷娘插件里最常用它来写面向对象（类和继承）。
+- [模块与 require](https://docs.juan.team/docs/lua/modules.md): > 写完的代码不能全堆在一个文件里。Lua 用 `require` 加载模块，把公共代码抽出来复用。卷娘插件里你几乎天天见 `local jn = require("jn")`——这就是加载卷娘 SDK 模块。
+- [表（Table）—— Lua 的核心](https://docs.juan.team/docs/lua/tables.md): > 这一章是最重要的。Lua 里**没有数组、没有字典、没有对象**——这些统统用一个叫 **table（表）** 的数据结构搞定。学透表，就学透了一半 Lua。
+- [Lua API 参考](https://docs.juan.team/docs/plugins/api-reference.md): JuanNiang-Neo 暴露给 Lua 插件的 API 函数。**可用性由 `pluggin.yaml` 中 `permissions` 控制**。
+- [插件引擎实现细节](https://docs.juan.team/docs/plugins/engine.md): ```go
+- [示例插件](https://docs.juan.team/docs/plugins/examples.md): 学习插件开发最快的方式是读真实代码。JuanNiang 提供两套示例：
+- [插件开发常见坑](https://docs.juan.team/docs/plugins/pitfalls.md): 1. **QQ 号是 number 而非 string**：`send_private_msg("10086", ...)` 无效，Lua 字符串无法转 Go int64
+- [插件开发指南（快速开始）](https://docs.juan.team/docs/plugins/quickstart.md): 本文档整合 JuanNiang-Neo Lua 插件的开发流程、API 参考与引擎实现细节，是二次开发插件的完整参考。插件系统的架构概览见 [架构文档](../development/architecture.md#四插件系统)。
+- [官方插件仓库（JuanNiang-Plugins）](https://docs.juan.team/docs/plugins/repo.md): > 仓库地址：[https://github.com/JuanNiangDev/JuanNiang-Plugins](https://github.com/JuanNiangDev/JuanNiang-Plugins)
+- [插件商店（Plugin Store）与动态配置](https://docs.juan.team/docs/plugins/store.md): 本文档介绍插件商店浏览/安装、插件动态配置（`config.yaml` + `jn.config`）、镜像源管理，以及插件仓库的元数据与审核流程。
+- [快速开始](https://docs.juan.team/docs/quickstart.md): 本页带你**在 5 分钟内把卷娘跑起来**。部署细节（环境变量、裸机、反代、systemd、故障排查）见 [部署与调试指南](deployment.md)。
