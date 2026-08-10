@@ -5,6 +5,7 @@ import {Icon} from '@iconify/react/offline';
 import type {JSX} from 'react';
 import styles from './index.module.css';
 import {registerIconify} from '../icons/register';
+import DepthCarousel from '../components/DepthCarousel';
 
 // 注册离线 Iconify 图标集合（幂等）
 registerIconify();
@@ -172,12 +173,19 @@ export default function Home(): JSX.Element {
         <section className={styles.section}>
           <div className="container">
             <h2 className={styles.sectionTitle}>效果图</h2>
-            <div className="row">
-              {screenshots.map((s) => (
-                <div className="col col--4" key={s.src}>
-                  <img src={s.src} alt={s.alt} className={styles.screenshot} />
-                </div>
-              ))}
+            <div style={{ height: 700 }}>
+              <DepthCarousel
+                items={screenshots.map(s => ({ image: s.src, alt: s.alt }))}
+                cardWidth={960}
+                cardHeight={540}
+                radius={16}
+                depth={200}
+                spread={100}
+                tilt={18}
+                visibleCards={3}
+                autoplay={true}
+                autoplayDelay={4000}
+              />
             </div>
           </div>
         </section>
