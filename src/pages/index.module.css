@@ -167,6 +167,20 @@ html[data-theme='dark'] .heroMask {
 .sectionTitle {
   text-align: center;
   margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.sectionTitle::before,
+.sectionTitle::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 1.2em;
+  background: var(--ifm-color-primary);
+  transform: skewX(-20deg);
+  margin: 0 0.5em;
+  vertical-align: top;
+  position: relative;
 }
 
 .featureCard {
