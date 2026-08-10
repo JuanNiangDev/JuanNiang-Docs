@@ -163,7 +163,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} 红岩网校 · JuanNiang-Neo. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} <a href="https://redrock.team/" target="_blank" rel="noopener noreferrer">红岩网校工作站</a> · JuanNiang-Neo. 由 Docusaurus 强力驱动`,
     },
     prism: {
       theme: prismThemes.github,
