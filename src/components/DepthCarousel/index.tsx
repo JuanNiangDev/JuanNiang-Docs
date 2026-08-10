@@ -71,7 +71,7 @@ const DepthCarousel = ({
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const scaleRef = useRef(1);
   const cfgRef = useRef({
-    count, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, duration, ease, loop, cardWidth, autoplayDelay
+    count, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, duration, ease, loop, cardWidth, autoplayDelay, perspective
   });
   const onChangeRef = useRef(onChange);
 
@@ -82,7 +82,7 @@ const DepthCarousel = ({
 
   onChangeRef.current = onChange;
   cfgRef.current = {
-    count, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, duration, ease, loop, cardWidth, autoplayDelay
+    count, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, duration, ease, loop, cardWidth, autoplayDelay, perspective
   };
   const layout = useCallback((pos: number) => {
     const cfg = cfgRef.current;
@@ -116,7 +116,15 @@ const DepthCarousel = ({
       const blurPx = cfg.blur > 0 ? Math.min(cfg.blur, (back / Math.max(1, cfg.visibleCards)) * cfg.blur) : 0;
       const zi = Math.round(2000 - d * 20);
 
-      el.style.transform = `translate(-50%, -50%) scale(${sc}) translateX(${tx.toFixed(2)}px) translateZ(${tz.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg)`;
+      // 显式透视缩放：stage 的 overflow:hidden 会把 transform-style 压成 flat，
+      // 使 translateZ 失去透视纵深，后排卡片不再逐级变小。这里按真实透视投影
+      // （scale = P / (P + depth*back)）对每张卡单独缩小，还原层次感的同时
+      // 保留 stage 的裁剪以维持 CLS。
+      const persp = cfg.perspective || 1400;
+      const pScale = back > 0 ? persp / (persp + cfg.depth * back) : 1;
+      const s = sc * pScale;
+
+      el.style.transform = `translate(-50%, -50%) scale(${s}) translateX(${tx.toFixed(2)}px) translateZ(${tz.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg)`;
       el.style.opacity = opacity.toFixed(3);
       el.style.filter = `brightness(${brightness.toFixed(3)}) blur(${blurPx.toFixed(2)}px)`;
       el.style.zIndex = String(zi);
