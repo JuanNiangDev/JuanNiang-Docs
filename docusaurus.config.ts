@@ -57,6 +57,13 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        // 站点地图：构建时生成 sitemap.xml，供搜索引擎爬取
+        sitemap: {
+          lastmod: 'date',
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/search/**'],
+        },
       } satisfies Preset.Options,
     ],
   ],
