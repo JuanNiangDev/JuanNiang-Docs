@@ -6,6 +6,7 @@ import type {JSX} from 'react';
 import styles from './index.module.css';
 import {registerIconify} from '../icons/register';
 import DepthCarousel from '../components/DepthCarousel';
+import GithubInfo from '../components/GithubInfo';
 import {Marquee, MarqueeContent, MarqueeItem, MarqueeFade} from '../components/Marquee';
 import StickerPeel from '../components/StickerPeel';
 
@@ -13,7 +14,6 @@ import StickerPeel from '../components/StickerPeel';
 registerIconify();
 
 const repoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Neo';
-const pluginsRepoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Plugins';
 
 const features = [
   {
@@ -117,7 +117,7 @@ export default function Home(): JSX.Element {
             <div className={styles.heroMask} />
           </div>
           <div className={styles.heroContent}>
-            <h1 className={styles.heroTitle}>Juanniang</h1>
+            <h1 className={styles.heroTitle}>JuanNiang</h1>
             <p className={styles.heroTagline}>基于 OneBot11 协议的 LLM QQ 聊天 Agent</p>
             <div className={styles.heroButtons}>
               <Link className="button button--primary button--lg" to="/docs/quickstart">
@@ -171,7 +171,7 @@ export default function Home(): JSX.Element {
         <section className={styles.section}>
           <div className="container">
             <h2 className={styles.sectionTitle}>效果图</h2>
-            <div style={{ height: 700 }}>
+            <div style={{ height: 600 }}>
               <DepthCarousel
                 items={screenshots.map(s => ({ image: s.src, alt: s.alt }))}
                 cardWidth={960}
@@ -211,16 +211,17 @@ export default function Home(): JSX.Element {
         {/* 仓库 */}
         <section className={styles.section}>
           <div className="container">
-            <h2 className={styles.sectionTitle}>相关仓库</h2>
-            <div className={styles.repoCards}>
-              <a className={styles.repoCard} href={repoUrl}>
-                <strong>JuanNiang-Neo</strong>
-                <span>主项目：机器人本体 + Web 管理面板</span>
-              </a>
-              <a className={styles.repoCard} href={pluginsRepoUrl}>
-                <strong>JuanNiang-Plugins</strong>
-                <span>官方插件仓库：插件源码 + 商店元数据 + hago CLI</span>
-              </a>
+            <h2 className={styles.sectionTitle}>项目仓库</h2>
+            <div className="row">
+              <div className="col col--4">
+                <GithubInfo owner="JuanNiangDev" repo="JuanNiang-Neo" />
+              </div>
+              <div className="col col--4">
+                <GithubInfo owner="JuanNiangDev" repo="JuanNiang-Plugins" />
+              </div>
+              <div className="col col--4">
+                <GithubInfo owner="JuanNiangDev" repo="JuanNiang-Docs" />
+              </div>
             </div>
           </div>
         </section>
