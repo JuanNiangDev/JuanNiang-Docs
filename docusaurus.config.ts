@@ -49,6 +49,17 @@ const config: Config = {
       },
     },
 
+    // ===== Umami 访问统计（analytics.hxcn.dev）=====
+    // 自托管 Umami，无第三方 Cookie；data-website-id 对应本站统计站点。
+    {
+      tagName: 'script',
+      attributes: {
+        defer: true,
+        src: 'https://analytics.hxcn.dev/script.js',
+        'data-website-id': 'b3dc741c-cfdc-409c-8d99-8d4f8ade0527',
+      },
+    },
+
     // ===== SEO 元信息（关键词、描述、Open Graph、Twitter Card、结构化数据）=====
     // 关键词：帮助搜索引擎理解站点主题（避免堆砌）
     {
