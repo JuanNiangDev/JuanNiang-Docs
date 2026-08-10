@@ -2,6 +2,31 @@
 
 Guidance for agent sessions working in this repo. 本仓库是 JuanNiang 文档站（Docusaurus）：文档内容在 `docs/`，站点代码在 `src/`，侧边栏与配置见 `sidebars.ts` / `docusaurus.config.ts`。新增文档需在 `sidebars.ts` 对应章节注册。
 
+## 项目上线链接
+
+- 文档站：https://docs.juan.team
+- 代码仓库：https://github.com/JuanNiangDev/JuanNiang-Neo
+- 插件仓库：https://github.com/JuanNiangDev/JuanNiang-Plugins
+
+## 本地测试排除统计（Umami）
+
+站点接入了 [Umami](https://umami.is) 访问统计（脚本 `https://analytics.hxcn.dev/script.js`）。使用**无头浏览器 / Playwright / 本地直接访问**等进行测试时，**务必排除统计访问**，避免把测试流量计入线上数据：
+
+1. 打开浏览器开发者控制台（`Settings -> More tools -> Developer tools`，或按 `F12`）
+2. 在 Console 输入并回车：
+
+```js
+localStorage.setItem('umami.disabled', 1);
+```
+
+该设置**按网站生效**，每个需要排除的网站都要单独设置一次。
+
+如需移除该设置，输入并回车：
+
+```js
+localStorage.removeItem('umami.disabled');
+```
+
 ## 分支保护与贡献规则
 
 主分支（`main`）已启用分支保护，**禁止直接向主分支提交代码**：
