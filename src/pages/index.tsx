@@ -6,6 +6,7 @@ import type {JSX} from 'react';
 import styles from './index.module.css';
 import {registerIconify} from '../icons/register';
 import DepthCarousel from '../components/DepthCarousel';
+import StickerPeel from '../components/StickerPeel';
 
 // 注册离线 Iconify 图标集合（幂等）
 registerIconify();
@@ -126,7 +127,13 @@ export default function Home(): JSX.Element {
               </Link>
             </div>
           </div>
-          <img src="/img/stick.webp" alt="Juanniang 吉祥物" className={styles.heroMascot} />
+          <StickerPeel
+            imageSrc="/img/stick.webp"
+            className={styles.heroMascot}
+            rotate={30}
+            peelBackHoverPct={30}
+            peelBackActivePct={40}
+          />
         </section>
 
         {/* 特性 */}
