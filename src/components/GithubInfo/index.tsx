@@ -1,6 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import {Icon} from '@iconify/react';
+import {Icon} from '@iconify/react/offline';
+import {registerIconify} from '../../icons/register';
 import styles from './styles.module.css';
+
+// 注册本地离线 Iconify 图标集合（幂等），图标来自 src/icons/mdi/ 本地数据，无运行时第三方请求
+registerIconify();
 
 interface GithubInfoProps {
   owner: string;
