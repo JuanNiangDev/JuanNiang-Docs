@@ -170,31 +170,64 @@ html[data-theme='dark'] .heroMask {
 }
 
 .featureCard {
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 12px;
-  padding: 1.25rem;
+  width: 340px;
   height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 16px;
+  padding: 1.5rem;
   background: var(--ifm-color-emphasis-100);
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .featureCard:hover {
   border-color: var(--ifm-color-primary);
-  transform: translateY(-2px);
 }
 
-.featureIcon {
-  margin-bottom: 0.5rem;
+.featureCardHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
 }
 
-.featureCard h3 {
-  margin-bottom: 0.5rem;
+.featureCardHeader .featureIcon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
 }
 
-.featureCard p {
-  font-size: 0.9rem;
-  opacity: 0.85;
+.featureCardHeader h3 {
   margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.featurePoints {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: #888;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.featurePoints li::marker {
+  color: #aaa;
+}
+
+.featurePoints li {
+  margin-bottom: 0.15rem;
 }
 
 .chapterCard {

@@ -27,6 +27,7 @@
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-fast-marquee": "^1.6.5",
     "react-medium-image-zoom": "^5.4.8"
   },
   "devDependencies": {
