@@ -17,6 +17,14 @@ const config: Config = {
   baseUrl: '/',
   trailingSlash: false,
 
+  // 构建加速 + 更小产物：Lightning CSS 压缩样式、SWC 压缩 JS（@docusaurus/faster 已安装）
+  future: {
+    faster: {
+      lightningCssMinimizer: true,
+      swcJsMinimizer: true,
+    },
+  },
+
   onBrokenLinks: 'warn',
 
   // 注入脚本：chunk 加载失败自动重试 + mermaid 缩放/拖动交互
