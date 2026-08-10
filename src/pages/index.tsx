@@ -100,9 +100,9 @@ const chapters = [
 ];
 
 const screenshots = [
-  {src: '/img/login.png', alt: '登录页'},
-  {src: '/img/home.png', alt: '首页'},
-  {src: '/img/chat.png', alt: '聊天'},
+  {src: '/img/login.webp', alt: '登录页'},
+  {src: '/img/home.webp', alt: '首页'},
+  {src: '/img/chat.webp', alt: '聊天'},
 ];
 
 export default function Home(): JSX.Element {
@@ -113,7 +113,7 @@ export default function Home(): JSX.Element {
         {/* Hero */}
         <section className={styles.hero}>
           <div className={styles.heroBg} aria-hidden="true">
-            <img src="/img/banner.png" alt="" className={styles.heroBgImg} />
+            <img src="/img/banner.webp" alt="" className={styles.heroBgImg} />
             <div className={styles.heroMask} />
           </div>
           <div className={styles.heroContent}>

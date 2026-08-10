@@ -10,7 +10,7 @@ const pluginsRepoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Plugins';
 const config: Config = {
   title: 'JuanNiang-Neo',
   tagline: '基于 OneBot11 协议的 LLM QQ 聊天 Agent',
-  favicon: 'img/avatar.png',
+  favicon: 'img/avatar.webp',
 
   // 部署地址：GitHub Pages 项目站点需把 baseUrl 改为 '/<仓库名>/'（例如 '/JuanNiang-Docs/'）
   url: 'https://juanniangdev.github.io',
@@ -101,7 +101,7 @@ const config: Config = {
       title: 'JuanNiang-Neo',
       logo: {
         alt: 'JuanNiang-Neo',
-        src: 'img/avatar.png',
+        src: 'img/avatar.webp',
       },
       items: [
         {type: 'doc', docId: 'quickstart', label: '快速开始', position: 'left'},
