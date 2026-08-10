@@ -1,0 +1,114 @@
+.imageZoom {
+  position: relative;
+}
+
+/* 放大按钮（聚焦时可见） */
+.imageZoom [data-rmiz-btn-zoom] {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  margin: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  touch-action: manipulation;
+  appearance: none;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.5rem;
+  color: #fff;
+  outline-offset: 2px;
+  cursor: zoom-in;
+}
+
+/* 未聚焦时隐藏放大按钮（保持可访问性，仅焦点可见） */
+.imageZoom [data-rmiz-btn-zoom]:not(:focus):not(:active) {
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+  clip: rect(0 0 0 0);
+}
+
+.imageZoom [data-rmiz-content='found'] img,
+.imageZoom [data-rmiz-content='found'] svg,
+.imageZoom [data-rmiz-content='found'] [role='img'],
+.imageZoom [data-rmiz-content='found'] [data-zoom] {
+  cursor: zoom-in;
+}
+
+/* 全屏对话框 */
+.dialog {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+}
+
+/* 遮罩层 */
+.dialog [data-rmiz-modal-overlay] {
+  position: absolute;
+  inset: 0;
+  transition: background 0.3s;
+}
+
+.dialog [data-rmiz-modal-overlay='hidden'] {
+  background: transparent;
+}
+
+.dialog [data-rmiz-modal-overlay='visible'] {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.dialog [data-rmiz-modal-content] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.dialog [data-rmiz-modal-img] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  cursor: zoom-out;
+  transition: transform 0.3s;
+}
+
+/* 关闭（缩小）按钮 */
+.dialog [data-rmiz-btn-unzoom] {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 1;
+  margin: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  touch-action: manipulation;
+  appearance: none;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.5rem;
+  color: #fff;
+  outline-offset: 2px;
+  cursor: zoom-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog [data-rmiz-modal-img],
+  .dialog [data-rmiz-modal-overlay] {
+    transition: none;
+  }
+}

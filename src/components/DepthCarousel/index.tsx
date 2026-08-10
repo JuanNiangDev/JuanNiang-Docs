@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import styles from './styles.module.css';
+import { ImageZoom } from '../ImageZoom';
 
 export interface CarouselItem {
   image: string;
@@ -74,16 +75,6 @@ const DepthCarousel = ({
   });
   const onChangeRef = useRef(onChange);
 
-  const dragRef = useRef<{
-    x: number;
-    startPos: number;
-    lastX: number;
-    lastT: number;
-    v: number;
-    moved: boolean;
-    id: number;
-  } | null>(null);
-  const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reducedRef = useRef(false);
 
@@ -203,94 +194,8 @@ const DepthCarousel = ({
     return () => ro.disconnect();
   }, [layout]);
 
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      const cfg = cfgRef.current;
-      if (cfg.count < 2) return;
-      e.preventDefault();
-      tweenRef.current?.kill();
-      const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-      const delta = e.deltaMode === 1 ? raw * 24 : raw;
-      const step = clamp(delta / (cfg.cardWidth * 0.9), -0.6, 0.6);
-      posRef.current += step;
-      layout(posRef.current);
-      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
-      wheelTimerRef.current = setTimeout(() => setFocus(Math.round(posRef.current), true), 130);
-    };
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', onWheel);
-      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
-    };
-  }, [layout, setFocus]);
-
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    const cfg = cfgRef.current;
-    if (cfg.count < 2) return;
-    tweenRef.current?.kill();
-    dragRef.current = {
-      x: e.clientX,
-      startPos: posRef.current,
-      lastX: e.clientX,
-      lastT: performance.now(),
-      v: 0,
-      moved: false,
-      id: e.pointerId
-    };
-  }, []);
-
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag) return;
-      const cfg = cfgRef.current;
-      const stepPx = Math.max(cfg.cardWidth * 0.55 * scaleRef.current, 40);
-      const dx = e.clientX - drag.x;
-      if (!drag.moved && Math.abs(dx) > 4) {
-        drag.moved = true;
-        rootRef.current?.setPointerCapture(drag.id);
-      }
-      if (!drag.moved) return;
-      const now = performance.now();
-      const dt = Math.max(now - drag.lastT, 1);
-      drag.v = (e.clientX - drag.lastX) / dt;
-      drag.lastX = e.clientX;
-      drag.lastT = now;
-      posRef.current = drag.startPos - dx / stepPx;
-      layout(posRef.current);
-    },
-    [layout]
-  );
-
-  const onPointerEnd = useCallback(() => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    dragRef.current = null;
-    if (!drag.moved) return;
-    const cfg = cfgRef.current;
-    const stepPx = Math.max(cfg.cardWidth * 0.55 * scaleRef.current, 40);
-    const projected = posRef.current - (drag.v * 180) / stepPx;
-    setFocus(Math.round(projected), true);
-  }, [setFocus]);
-
-  const onKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        navigateBy(-1);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        navigateBy(1);
-      }
-    },
-    [navigateBy]
-  );
-
   const onCardClick = useCallback(
     (index: number) => {
-      if (dragRef.current?.moved) return;
       setFocus(index, true);
     },
     [setFocus]
@@ -339,7 +244,6 @@ const DepthCarousel = ({
   useEffect(
     () => () => {
       tweenRef.current?.kill();
-      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     },
     []
@@ -353,12 +257,6 @@ const DepthCarousel = ({
       role="group"
       aria-roledescription="carousel"
       aria-label="Depth carousel"
-      tabIndex={0}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerEnd}
-      onPointerCancel={onPointerEnd}
-      onKeyDown={onKeyDown}
     >
       <div className={styles.depthCarousel__stage}>
         {data.map((item, i) => (
@@ -372,7 +270,14 @@ const DepthCarousel = ({
             aria-hidden={active !== i}
             onClick={() => onCardClick(i)}
           >
-            <img className={styles.depthCarousel__img} src={item.image} alt={item.alt || ''} draggable={false} />
+            <div
+              style={{ width: '100%', height: '100%', position: 'relative' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ImageZoom>
+                <img className={styles.depthCarousel__img} src={item.image} alt={item.alt || ''} draggable={false} />
+              </ImageZoom>
+            </div>
             <span
               className={styles.depthCarousel__tint}
               ref={el => { overlayRefs.current[i] = el; }}
