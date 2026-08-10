@@ -9,7 +9,9 @@ const pluginsRepoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Plugins';
 
 const config: Config = {
   title: 'JuanNiang-Neo',
-  tagline: '基于 OneBot11 协议的 LLM QQ 聊天 Agent',
+  // tagline 同时作为全站 meta description 与 og:description（主题自动注入）
+  tagline:
+    '卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。',
   favicon: 'img/avatar.webp',
 
   // 部署地址：GitHub Pages 项目站点需把 baseUrl 改为 '/<仓库名>/'（例如 '/JuanNiang-Docs/'）
@@ -42,6 +44,53 @@ const config: Config = {
         src: '/js/mermaid-panzoom.js',
         defer: true,
       },
+    },
+
+    // ===== SEO 元信息（关键词、描述、Open Graph、Twitter Card、结构化数据）=====
+    // 关键词：帮助搜索引擎理解站点主题（避免堆砌）
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'keywords',
+        content:
+          'JuanNiang, JuanNiang-Neo, 卷娘, OneBot11, OneBot 协议, QQ 机器人, QQ Bot, LLM, 大模型, 聊天机器人, AI 聊天 Agent, 智能对话, Go, 开源',
+      },
+    },
+    // 网站描述由主题以 tagline 生成（data-rh），此处不再重复注入 description，避免出现两个 meta description。
+    // Open Graph：Facebook / 微博 / QQ / 微信 等平台分享预览
+    {tagName: 'meta', attributes: {property: 'og:type', content: 'website'}},
+    {tagName: 'meta', attributes: {property: 'og:site_name', content: 'JuanNiang-Neo'}},
+    // og:image 为 static/img/banner.webp（640×350）
+    {tagName: 'meta', attributes: {property: 'og:image:type', content: 'image/webp'}},
+    {tagName: 'meta', attributes: {property: 'og:image:width', content: '640'}},
+    {tagName: 'meta', attributes: {property: 'og:image:height', content: '350'}},
+    {tagName: 'meta', attributes: {property: 'og:image:alt', content: 'JuanNiang-Neo 项目横幅'}},
+    // Twitter Card：推特分享预览（twitter:card/image 由主题生成）
+    {tagName: 'meta', attributes: {name: 'twitter:title', content: 'JuanNiang-Neo - 基于 OneBot11 协议的 LLM QQ 聊天 Agent'}},
+    {tagName: 'meta', attributes: {name: 'twitter:description', content: '基于 OneBot11 协议的 LLM QQ 聊天 Agent，支持插件扩展与二次开发。'}},
+    {tagName: 'meta', attributes: {name: 'twitter:image:alt', content: 'JuanNiang-Neo 项目横幅'}},
+    // 结构化数据：WebSite schema，增强搜索引擎对站点的理解
+    {
+      tagName: 'script',
+      attributes: {type: 'application/ld+json'},
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'JuanNiang-Neo',
+        alternateName: '卷娘',
+        url: 'https://juanniangdev.github.io/',
+        description:
+          '卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。',
+        inLanguage: 'zh-CN',
+        publisher: {
+          '@type': 'Organization',
+          name: '重庆邮电大学红岩网校工作室',
+          logo: {
+            '@type': 'ImageObject',
+            url: 'https://juanniangdev.github.io/img/banner.webp',
+          },
+        },
+      }),
     },
   ],
 
@@ -96,8 +145,8 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // 站点社交卡片图
-    image: 'img/banner.png',
+    // 站点社交卡片图（og:image / twitter:image）
+    image: 'img/banner.webp',
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
