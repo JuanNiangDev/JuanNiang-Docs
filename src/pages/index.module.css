@@ -67,7 +67,6 @@
 }
 
 .featureIcon {
-  font-size: 2rem;
   margin-bottom: 0.5rem;
 }
 
@@ -100,6 +99,10 @@
 }
 
 .chapterCard h3 {
+  margin-bottom: 0.5rem;
+}
+
+.chapterIcon {
   margin-bottom: 0.5rem;
 }
 

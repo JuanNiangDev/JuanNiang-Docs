@@ -1,40 +1,51 @@
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import {Icon} from '@iconify/react/offline';
 import type {JSX} from 'react';
 import styles from './index.module.css';
+import {registerIconify} from '../icons/register';
+
+// 注册离线 Iconify 图标集合（幂等）
+registerIconify();
 
 const repoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Neo';
 const pluginsRepoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Plugins';
 
 const features = [
   {
-    icon: '🤖',
+    icon: 'mdi:robot',
+    color: '#6366f1',
     title: 'Agent 系统',
     desc: '基于 Eino ADK 的 ChatModelAgent（OpenAI 兼容），Provider / MCP / Tool / Skill / Prompt / Plugin 多模块组合，工具调用在 ReAct 循环内同步完成',
   },
   {
-    icon: '⚡',
+    icon: 'mdi:lightning-bolt',
+    color: '#f59e0b',
     title: '异步并发处理',
     desc: 'ConcurrencyManager 控制每 ChatArea 最多 8 个 Agent goroutine 并发，事件经三阶段管线（Plugin 拦截 → 回复策略 → Agent 派发）高效分流',
   },
   {
-    icon: '🧠',
+    icon: 'mdi:brain',
+    color: '#ec4899',
     title: '四层记忆体系',
     desc: '短期记忆（Redis 滑动窗口 + 自动 Compact）/ 长期记忆（Postgres + LRU）/ 技能记忆 / 会话记录，全部持久化可审计',
   },
   {
-    icon: '🧩',
+    icon: 'mdi:puzzle',
+    color: '#10b981',
     title: 'Lua 插件系统',
     desc: 'gopher-lua 驱动，多级命令 + LuaCATS SDK 代码提示 + 插件目录文件读写；插件商店从 GitHub 一键安装，动态配置由 Web 面板渲染',
   },
   {
-    icon: '🖥️',
+    icon: 'mdi:monitor',
+    color: '#3b82f6',
     title: 'Web 管理后台',
     desc: 'Vue 3 + Vuetify 3，JWT 鉴权（可选 OIDC SSO），管理全部配置与运行时状态，支持热切换',
   },
   {
-    icon: '📦',
+    icon: 'mdi:package-variant-closed',
+    color: '#8b5cf6',
     title: '开箱即用模块',
     desc: 'SQL 知识库 / 图床 / 表情包库 / 摸鱼人日历 / 定时消息（积木式编排）等内置功能，Postgres + Redis + Sandbox + T2I 可插拔基础设施',
   },
@@ -42,32 +53,44 @@ const features = [
 
 const chapters = [
   {
-    title: '📖 入门',
+    icon: 'mdi:book-open-variant',
+    color: '#06b6d4',
+    title: '入门',
     desc: '了解项目定位与技术栈',
     to: '/docs/intro',
   },
   {
-    title: '🚀 快速开始',
+    icon: 'mdi:rocket-launch',
+    color: '#f97316',
+    title: '快速开始',
     desc: 'Docker Compose 一键部署 + 首次启动清单',
     to: '/docs/quickstart',
   },
   {
-    title: '🛠️ 部署',
+    icon: 'mdi:tools',
+    color: '#14b8a6',
+    title: '部署',
     desc: '环境变量、构建、健康检查、反代、systemd、FAQ',
     to: '/docs/deployment',
   },
   {
-    title: '💻 二次开发',
+    icon: 'mdi:code-tags',
+    color: '#22c55e',
+    title: '二次开发',
     desc: '本地开发环境、架构设计、Web API',
     to: '/docs/development/setup',
   },
   {
-    title: '🧩 插件开发',
+    icon: 'mdi:puzzle',
+    color: '#d946ef',
+    title: '插件开发',
     desc: 'Lua API 参考、插件商店、示例插件',
     to: '/docs/plugins/quickstart',
   },
   {
-    title: '📦 插件仓库',
+    icon: 'mdi:package-variant-closed',
+    color: '#eab308',
+    title: '插件仓库',
     desc: 'JuanNiang-Plugins：hago CLI 与贡献指南',
     to: '/docs/plugins/repo',
   },
@@ -107,7 +130,9 @@ export default function Home(): JSX.Element {
               {features.map((f) => (
                 <div className="col col--4" key={f.title}>
                   <div className={styles.featureCard}>
-                    <div className={styles.featureIcon}>{f.icon}</div>
+                    <div className={styles.featureIcon}>
+                      <Icon icon={f.icon} color={f.color} width={32} height={32} />
+                    </div>
                     <h3>{f.title}</h3>
                     <p>{f.desc}</p>
                   </div>
@@ -125,6 +150,9 @@ export default function Home(): JSX.Element {
               {chapters.map((c) => (
                 <div className="col col--4" key={c.title}>
                   <Link className={styles.chapterCard} to={c.to}>
+                    <div className={styles.chapterIcon}>
+                      <Icon icon={c.icon} color={c.color} width={32} height={32} />
+                    </div>
                     <h3>{c.title}</h3>
                     <p>{c.desc}</p>
                   </Link>
