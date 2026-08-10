@@ -2,35 +2,154 @@
  * 首页样式
  */
 .hero {
-  text-align: center;
-  padding: 4rem 1rem 2rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 720px;
+  padding: 4rem 2rem;
+  overflow: hidden;
 }
 
-.banner {
-  max-width: 640px;
-  width: 90%;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+.heroBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.heroBgImg {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scale(1.15);
+  height: 100%;
+  width: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center center;
+  filter: blur(12px);
+}
+
+.heroMask {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 浅色模式：左侧几乎完全不透明白色，向右渐变到透明 */
+html[data-theme='light'] .heroMask {
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(255, 255, 255, 0.97) 25%,
+    rgba(255, 255, 255, 0.5) 45%,
+    rgba(255, 255, 255, 0) 82%
+  );
+}
+
+/* 深色模式：左侧几乎完全不透明黑色，向右渐变到透明 */
+html[data-theme='dark'] .heroMask {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.97) 0%,
+    rgba(0, 0, 0, 0.97) 25%,
+    rgba(0, 0, 0, 0.45) 45%,
+    rgba(0, 0, 0, 0) 82%
+  );
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+  padding-left: 3rem;
 }
 
 .heroTitle {
-  font-size: 3rem;
-  font-weight: 700;
-  margin: 0.5rem 0 0.25rem;
+  font-family: 'PoetsenOne', var(--ifm-font-family-base);
+  font-size: 5.9rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+  line-height: 1.1;
+  color: var(--ifm-color-primary);
 }
 
 .heroTagline {
-  font-size: 1.2rem;
-  opacity: 0.75;
-  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
+  opacity: 0.8;
+  margin-bottom: 1.75rem;
+  line-height: 1.5;
 }
 
 .heroButtons {
   display: flex;
   gap: 0.75rem;
-  justify-content: center;
   flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.heroMascot {
+  position: relative;
+  z-index: 2;
+  width: 500px;
+  height: auto;
+  flex-shrink: 0;
+  margin-left: -8rem;
+  margin-right: 0.5rem;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.25));
+}
+
+@media (max-width: 996px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    min-height: auto;
+  }
+
+  .heroBgImg {
+    right: -20%;
+    height: 100%;
+  }
+
+  html[data-theme='light'] .heroMask {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.9) 35%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0) 85%
+    );
+  }
+
+  html[data-theme='dark'] .heroMask {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.85) 35%,
+      rgba(0, 0, 0, 0.45) 60%,
+      rgba(0, 0, 0, 0) 85%
+    );
+  }
+
+  .heroContent {
+    max-width: 100%;
+    padding-left: 0;
+  }
+
+  .heroButtons {
+    justify-content: center;
+  }
+
+  .heroTitle {
+    font-size: 60px;
+  }
+
+  .heroMascot {
+    margin: 2rem 0 0;
+    width: 260px;
+  }
 }
 
 .section {

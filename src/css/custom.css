@@ -3,6 +3,21 @@
  * 品牌色：JuanNiang 蓝色 #0b85d7
  */
 
+/* Poetsen One 手写风标题字体（hero 区域） */
+@font-face {
+  font-family: 'PoetsenOne';
+  src: url('/font/PoetsenOne-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 顶部导航栏标题使用 Poetsen One 手写体 */
+.navbar__title {
+  font-family: 'PoetsenOne', var(--ifm-font-family-base);
+  font-weight: 400;
+}
+
 :root {
   --ifm-color-primary: #0b85d7;
   --ifm-color-primary-dark: #0a76bf;

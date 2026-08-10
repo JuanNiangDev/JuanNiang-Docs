@@ -109,17 +109,23 @@ export default function Home(): JSX.Element {
       <main>
         {/* Hero */}
         <section className={styles.hero}>
-          <img src="/img/banner.png" alt="JuanNiang-Neo" className={styles.banner} />
-          <h1 className={styles.heroTitle}>{siteConfig.title}</h1>
-          <p className={styles.heroTagline}>{siteConfig.tagline}</p>
-          <div className={styles.heroButtons}>
-            <Link className="button button--primary button--lg" to="/docs/quickstart">
-              快速开始
-            </Link>
-            <Link className="button button--secondary button--lg" href={repoUrl}>
-              GitHub
-            </Link>
+          <div className={styles.heroBg} aria-hidden="true">
+            <img src="/img/banner.png" alt="" className={styles.heroBgImg} />
+            <div className={styles.heroMask} />
           </div>
+          <div className={styles.heroContent}>
+            <h1 className={styles.heroTitle}>Juanniang</h1>
+            <p className={styles.heroTagline}>基于 OneBot11 协议的 LLM QQ 聊天 Agent</p>
+            <div className={styles.heroButtons}>
+              <Link className="button button--primary button--lg" to="/docs/quickstart">
+                快速开始
+              </Link>
+              <Link className="button button--secondary button--lg" href={repoUrl}>
+                GitHub
+              </Link>
+            </div>
+          </div>
+          <img src="/img/stick.webp" alt="Juanniang 吉祥物" className={styles.heroMascot} />
         </section>
 
         {/* 特性 */}
