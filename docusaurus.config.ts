@@ -7,6 +7,9 @@ import type * as Preset from '@docusaurus/preset-classic';
 const repoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Neo';
 const pluginsRepoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Plugins';
 
+// 站点部署域名（单一来源）：默认 nginx 托管域名，可用环境变量 SITE_URL 覆盖，避免硬编码。
+const siteUrl = process.env.SITE_URL ?? 'https://docs.juan.team';
+
 const config: Config = {
   title: 'JuanNiang-Neo',
   // tagline 同时作为全站 meta description 与 og:description（主题自动注入）
@@ -14,8 +17,8 @@ const config: Config = {
     '卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。',
   favicon: 'img/avatar.webp',
 
-  // 部署地址：GitHub Pages 项目站点需把 baseUrl 改为 '/<仓库名>/'（例如 '/JuanNiang-Docs/'）
-  url: 'https://juanniangdev.github.io',
+  // 部署地址：生产由 nginx 托管于 https://docs.juan.team（不走 GitHub Pages，故 url 用真实域名）
+  url: siteUrl,
   baseUrl: '/',
   trailingSlash: false,
 
@@ -78,7 +81,7 @@ const config: Config = {
         '@type': 'WebSite',
         name: 'JuanNiang-Neo',
         alternateName: '卷娘',
-        url: 'https://juanniangdev.github.io/',
+        url: `${siteUrl}/`,
         description:
           '卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。',
         inLanguage: 'zh-CN',
@@ -87,7 +90,7 @@ const config: Config = {
           name: '重庆邮电大学红岩网校工作室',
           logo: {
             '@type': 'ImageObject',
-            url: 'https://juanniangdev.github.io/img/banner.webp',
+            url: `${siteUrl}/img/banner.webp`,
           },
         },
       }),
