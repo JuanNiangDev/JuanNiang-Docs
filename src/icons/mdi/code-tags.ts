@@ -1,0 +1,9 @@
+import type {IconifyIcon} from '@iconify/react/offline';
+
+const icon: IconifyIcon = {
+  "body": "<path fill=\"currentColor\" d=\"m14.6 16.6l4.6-4.6l-4.6-4.6L16 6l6 6l-6 6zm-5.2 0L4.8 12l4.6-4.6L8 6l-6 6l6 6z\"/>",
+  "width": 24,
+  "height": 24
+};
+
+export default icon;

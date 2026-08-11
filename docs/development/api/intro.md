@@ -2,10 +2,6 @@
 title: Web API：接口约定与系统状态
 ---
 
----
-title: JuanNiang-Neo Web API 文档
----
-
 
 **Base URL:** `http://localhost:8090/api/v1`
 **Content-Type:** `application/json`（上传文件为 `multipart/form-data`）

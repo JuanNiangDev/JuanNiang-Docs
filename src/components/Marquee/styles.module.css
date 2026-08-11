@@ -1,0 +1,35 @@
+.marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding-block: 0.5rem;
+}
+
+.marqueeFade {
+  pointer-events: none;
+  position: absolute;
+  inset-block: 0;
+  z-index: 10;
+  height: 100%;
+  width: 4rem;
+  backdrop-filter: blur(1px);
+}
+
+.marqueeFade[data-side='left'] {
+  left: 0;
+  background: linear-gradient(to right, var(--ifm-background-color), transparent);
+  mask-image: linear-gradient(to right, var(--ifm-background-color) 25%, transparent);
+  -webkit-mask-image: linear-gradient(to right, var(--ifm-background-color) 25%, transparent);
+}
+
+.marqueeFade[data-side='right'] {
+  right: 0;
+  background: linear-gradient(to left, var(--ifm-background-color), transparent);
+  mask-image: linear-gradient(to left, var(--ifm-background-color) 25%, transparent);
+  -webkit-mask-image: linear-gradient(to left, var(--ifm-background-color) 25%, transparent);
+}
+
+.marqueeItem {
+  margin: 0 0.75rem;
+  flex-shrink: 0;
+}

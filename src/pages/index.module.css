@@ -2,44 +2,161 @@
  * 首页样式
  */
 .hero {
-  text-align: center;
-  padding: 4rem 1rem 2rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 720px;
+  padding: 4rem 2rem;
+  overflow: hidden;
 }
 
-.banner {
-  max-width: 640px;
-  width: 90%;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+.heroBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.heroBgImg {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scale(1.15);
+  height: 100%;
+  width: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center center;
+  filter: blur(12px);
+}
+
+.heroMask {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 浅色模式：左侧几乎完全不透明白色，向右渐变到透明 */
+html[data-theme='light'] .heroMask {
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(255, 255, 255, 0.97) 25%,
+    rgba(255, 255, 255, 0.5) 45%,
+    rgba(255, 255, 255, 0) 82%
+  );
+}
+
+/* 深色模式：左侧几乎完全不透明黑色，向右渐变到透明 */
+html[data-theme='dark'] .heroMask {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.97) 0%,
+    rgba(0, 0, 0, 0.97) 25%,
+    rgba(0, 0, 0, 0.45) 45%,
+    rgba(0, 0, 0, 0) 82%
+  );
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+  padding-left: 3rem;
 }
 
 .heroTitle {
-  font-size: 3rem;
-  font-weight: 700;
-  margin: 0.5rem 0 0.25rem;
+  font-family: 'PoetsenOne', var(--ifm-font-family-base);
+  font-size: 4.2rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+  line-height: 1.1;
+  color: var(--ifm-color-primary);
 }
 
 .heroTagline {
-  font-size: 1.2rem;
-  opacity: 0.75;
-  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
+  opacity: 0.8;
+  margin-bottom: 1.75rem;
+  line-height: 1.5;
 }
 
 .heroButtons {
   display: flex;
   gap: 0.75rem;
-  justify-content: center;
   flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.heroMascot {
+  position: relative;
+  z-index: 2;
+  --sticker-width: 500px;
+  flex-shrink: 0;
+  margin-left: -8rem;
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 996px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    min-height: auto;
+  }
+
+  .heroBgImg {
+    right: -20%;
+    height: 100%;
+  }
+
+  html[data-theme='light'] .heroMask {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.9) 35%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0) 85%
+    );
+  }
+
+  html[data-theme='dark'] .heroMask {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.85) 35%,
+      rgba(0, 0, 0, 0.45) 60%,
+      rgba(0, 0, 0, 0) 85%
+    );
+  }
+
+  .heroContent {
+    max-width: 100%;
+    padding-left: 0;
+  }
+
+  .heroButtons {
+    justify-content: center;
+  }
+
+  .heroTitle {
+    font-size: 60px;
+  }
+
+  .heroMascot {
+    margin: 2rem 0 0;
+    --sticker-width: 260px;
+  }
 }
 
 .section {
-  padding: 3.5rem 0;
+  padding: 2.5rem 0;
 }
 
 /* 相邻章节（核心特性 / 文档导航等卡片区）之间拉开间隔 */
 .section + .section {
-  padding-top: 5rem;
+  padding-top: 2.5rem;
 }
 
 /* 卡片网格行间留白：Infima .row 默认无垂直间距，两行卡片会紧贴在一起 */
@@ -50,35 +167,81 @@
 .sectionTitle {
   text-align: center;
   margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.sectionTitle::before,
+.sectionTitle::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 1.2em;
+  background: var(--ifm-color-primary);
+  transform: skewX(-20deg);
+  margin: 0 0.5em;
+  vertical-align: top;
+  position: relative;
 }
 
 .featureCard {
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 12px;
-  padding: 1.25rem;
+  width: 340px;
   height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 16px;
+  padding: 1.5rem;
   background: var(--ifm-color-emphasis-100);
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .featureCard:hover {
   border-color: var(--ifm-color-primary);
-  transform: translateY(-2px);
 }
 
-.featureIcon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+.featureCardHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
 }
 
-.featureCard h3 {
-  margin-bottom: 0.5rem;
+.featureCardHeader .featureIcon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
 }
 
-.featureCard p {
-  font-size: 0.9rem;
-  opacity: 0.85;
+.featureCardHeader h3 {
   margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.featurePoints {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: #888;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.featurePoints li::marker {
+  color: #aaa;
+}
+
+.featurePoints li {
+  margin-bottom: 0.15rem;
 }
 
 .chapterCard {
@@ -94,12 +257,14 @@
 
 .chapterCard:hover {
   border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-primary);
-  transform: translateY(-2px);
   text-decoration: none;
 }
 
 .chapterCard h3 {
+  margin-bottom: 0.5rem;
+}
+
+.chapterIcon {
   margin-bottom: 0.5rem;
 }
 
@@ -109,45 +274,50 @@
   margin: 0;
 }
 
-.screenshot {
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid var(--ifm-color-emphasis-200);
-}
-
-.repoCards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.repoCard {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 12px;
-  padding: 1.25rem;
-  color: inherit;
-  background: var(--ifm-color-emphasis-100);
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-.repoCard:hover {
-  border-color: var(--ifm-color-primary);
-  transform: translateY(-2px);
-  text-decoration: none;
-}
-
-.repoCard span {
-  font-size: 0.9rem;
-  opacity: 0.85;
-}
-
 @media (max-width: 996px) {
   .heroTitle {
     font-size: 2.2rem;
   }
+}
+
+/* 项目介绍 + 技术栈 */
+.introText {
+  max-width: 720px;
+  margin: 0 auto 2rem;
+  text-align: center;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.techTitle {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.techStack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.techChip {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-800);
+  white-space: nowrap;
+}
+
+.techChip:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
 }

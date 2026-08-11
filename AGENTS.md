@@ -2,13 +2,44 @@
 
 Guidance for agent sessions working in this repo. 本仓库是 JuanNiang 文档站（Docusaurus）：文档内容在 `docs/`，站点代码在 `src/`，侧边栏与配置见 `sidebars.ts` / `docusaurus.config.ts`。新增文档需在 `sidebars.ts` 对应章节注册。
 
+## 项目上线链接
+
+- 文档站：https://docs.juan.team
+- 代码仓库：https://github.com/JuanNiangDev/JuanNiang-Neo
+- 插件仓库：https://github.com/JuanNiangDev/JuanNiang-Plugins
+
+## 本地测试排除统计（Umami）
+
+站点接入了 [Umami](https://umami.is) 访问统计（脚本 `https://analytics.hxcn.dev/script.js`）。使用**无头浏览器 / Playwright / 本地直接访问**等进行测试时，**务必排除统计访问**，避免把测试流量计入线上数据：
+
+1. 打开浏览器开发者控制台（`Settings -> More tools -> Developer tools`，或按 `F12`）
+2. 在 Console 输入并回车：
+
+```js
+localStorage.setItem('umami.disabled', 1);
+```
+
+该设置**按网站生效**，每个需要排除的网站都要单独设置一次。
+
+如需移除该设置，输入并回车：
+
+```js
+localStorage.removeItem('umami.disabled');
+```
+
 ## 分支保护与贡献规则
 
 主分支（`main`）已启用分支保护，**禁止直接向主分支提交代码**：
 
 - **仓库内贡献者（读写权限）**：所有文档修改必须在**新建的分支**（如 `docs/xxx`）上进行，然后通过 **Pull Request** 合并到主分支；直接 push 到 `main` 会被拒绝。
-- **Fork 贡献者**：请在自 fork 的仓库中**新建分支**开发，再向本仓库发起 Pull Request；**禁止从 fork 仓库的主分支（`main`/`master`）直接发起 PR**，此类 PR 将被拒绝。
+- **Fork 贡献者（含 agent 协作）**：可在自 fork 仓库的**主分支**上自由开发、提交（fork 的 `main` 不受上游分支保护限制）；但向本仓库贡献改动时，必须**基于功能分支**向本仓库发起 Pull Request；**禁止从 fork 仓库的主分支（`main`/`master`）直接发起 PR**，此类 PR 将被拒绝。
+- **重要（agent 协作）**：当用户要求「发起 PR / 合并 PR」时，**不得把功能分支直接合并进 fork 自己的 `main`**——那只是本地合并，并不会把改动贡献给上游。应基于该功能分支向**上游仓库（`upstream`）**发起 Pull Request，由上游维护者合并。
 - 主分支的合并只能通过 Pull Request 完成（详见 README「贡献指南」）。
+## 同步规则（上游更新处理）
+
+- 提交 PR 前若上游（`upstream`）有更新，必须先在 GitHub 上点击 **Update branch**，再在本地执行 `git fetch upstream && git rebase upstream/main` 变基拉取，确保基于最新上游代码，避免冲突与覆盖他人提交。
+- 必须使用 rebase 变基拉取上游提交，**禁止将上游提交 merge 到本地仓库**。
+- 禁止在本地直接推送旧基点分支后绕过 rebase 发起 PR。
 
 ## 提交信息规范（重要）
 

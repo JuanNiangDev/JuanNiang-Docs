@@ -7,15 +7,28 @@ import type * as Preset from '@docusaurus/preset-classic';
 const repoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Neo';
 const pluginsRepoUrl = 'https://github.com/JuanNiangDev/JuanNiang-Plugins';
 
+// 站点部署域名（单一来源）：默认 nginx 托管域名，可用环境变量 SITE_URL 覆盖，避免硬编码。
+const siteUrl = process.env.SITE_URL ?? 'https://docs.juan.team';
+
 const config: Config = {
   title: 'JuanNiang-Neo',
-  tagline: '基于 OneBot11 协议的 LLM QQ 聊天 Agent',
-  favicon: 'img/avatar.png',
+  // tagline 同时作为全站 meta description 与 og:description（主题自动注入）
+  tagline:
+    '卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。',
+  favicon: 'img/avatar.webp',
 
-  // 部署地址：GitHub Pages 项目站点需把 baseUrl 改为 '/<仓库名>/'（例如 '/JuanNiang-Docs/'）
-  url: 'https://juanniangdev.github.io',
+  // 部署地址：生产由 nginx 托管于 https://docs.juan.team（不走 GitHub Pages，故 url 用真实域名）
+  url: siteUrl,
   baseUrl: '/',
   trailingSlash: false,
+
+  // 构建加速 + 更小产物：Lightning CSS 压缩样式、SWC 压缩 JS（@docusaurus/faster 已安装）
+  future: {
+    faster: {
+      lightningCssMinimizer: true,
+      swcJsMinimizer: true,
+    },
+  },
 
   onBrokenLinks: 'warn',
 
@@ -34,6 +47,64 @@ const config: Config = {
         src: '/js/mermaid-panzoom.js',
         defer: true,
       },
+    },
+
+    // ===== Umami 访问统计（analytics.hxcn.dev）=====
+    // 自托管 Umami，无第三方 Cookie；data-website-id 对应本站统计站点。
+    {
+      tagName: 'script',
+      attributes: {
+        defer: true,
+        src: 'https://analytics.hxcn.dev/script.js',
+        'data-website-id': 'b3dc741c-cfdc-409c-8d99-8d4f8ade0527',
+      },
+    },
+
+    // ===== SEO 元信息（关键词、描述、Open Graph、Twitter Card、结构化数据）=====
+    // 关键词：帮助搜索引擎理解站点主题（避免堆砌）
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'keywords',
+        content:
+          'JuanNiang, JuanNiang-Neo, 卷娘, OneBot11, OneBot 协议, QQ 机器人, QQ Bot, LLM, 大模型, 聊天机器人, AI 聊天 Agent, 智能对话, Go, 开源',
+      },
+    },
+    // 网站描述由主题以 tagline 生成（data-rh），此处不再重复注入 description，避免出现两个 meta description。
+    // Open Graph：Facebook / 微博 / QQ / 微信 等平台分享预览
+    {tagName: 'meta', attributes: {property: 'og:type', content: 'website'}},
+    {tagName: 'meta', attributes: {property: 'og:site_name', content: 'JuanNiang-Neo'}},
+    // og:image 为 static/img/banner.webp（640×350）
+    {tagName: 'meta', attributes: {property: 'og:image:type', content: 'image/webp'}},
+    {tagName: 'meta', attributes: {property: 'og:image:width', content: '640'}},
+    {tagName: 'meta', attributes: {property: 'og:image:height', content: '350'}},
+    {tagName: 'meta', attributes: {property: 'og:image:alt', content: 'JuanNiang-Neo 项目横幅'}},
+    // Twitter Card：推特分享预览（twitter:card/image 由主题生成）
+    {tagName: 'meta', attributes: {name: 'twitter:title', content: 'JuanNiang-Neo - 基于 OneBot11 协议的 LLM QQ 聊天 Agent'}},
+    {tagName: 'meta', attributes: {name: 'twitter:description', content: '基于 OneBot11 协议的 LLM QQ 聊天 Agent，支持插件扩展与二次开发。'}},
+    {tagName: 'meta', attributes: {name: 'twitter:image:alt', content: 'JuanNiang-Neo 项目横幅'}},
+    // 结构化数据：WebSite schema，增强搜索引擎对站点的理解
+    {
+      tagName: 'script',
+      attributes: {type: 'application/ld+json'},
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'JuanNiang-Neo',
+        alternateName: '卷娘',
+        url: `${siteUrl}/`,
+        description:
+          '卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。',
+        inLanguage: 'zh-CN',
+        publisher: {
+          '@type': 'Organization',
+          name: '重庆邮电大学红岩网校工作室',
+          logo: {
+            '@type': 'ImageObject',
+            url: `${siteUrl}/img/banner.webp`,
+          },
+        },
+      }),
     },
   ],
 
@@ -57,6 +128,13 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        // 站点地图：构建时生成 sitemap.xml，供搜索引擎爬取
+        sitemap: {
+          lastmod: 'date',
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/search/**'],
+        },
       } satisfies Preset.Options,
     ],
   ],
@@ -65,6 +143,22 @@ const config: Config = {
   markdown: {
     mermaid: true,
   },
+
+  // LLM 友好文档（llmstxt.org 规范）：构建时生成 /llms.txt（链接索引）与 /llms-full.txt（全量内容）。
+  // 同时为每页生成独立 .md 版本，使 llms.txt 中的 .md 链接真实可访问（v2 规范推荐）。
+  plugins: [
+    [
+      'docusaurus-plugin-llms',
+      {
+        generateLLMsTxt: true,
+        generateLLMsFullTxt: true,
+        generateMarkdownFiles: true,
+        preserveDirectoryStructure: true,
+        excludeImports: true,
+        removeDuplicateHeadings: true,
+      },
+    ],
+  ],
 
   // mermaid 图表支持（```mermaid 代码块）+ 本地全文搜索（无外部依赖，支持中文分词）
   themes: [
@@ -81,8 +175,8 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // 站点社交卡片图
-    image: 'img/banner.png',
+    // 站点社交卡片图（og:image / twitter:image）
+    image: 'img/banner.webp',
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
@@ -101,7 +195,7 @@ const config: Config = {
       title: 'JuanNiang-Neo',
       logo: {
         alt: 'JuanNiang-Neo',
-        src: 'img/avatar.png',
+        src: 'img/avatar.webp',
       },
       items: [
         {type: 'doc', docId: 'quickstart', label: '快速开始', position: 'left'},
@@ -163,7 +257,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} 红岩网校 · JuanNiang-Neo. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} <a href="https://redrock.team/" target="_blank" rel="noopener noreferrer">红岩网校工作站</a> · JuanNiang-Neo. 由 Docusaurus 强力驱动`,
     },
     prism: {
       theme: prismThemes.github,
