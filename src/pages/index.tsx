@@ -212,10 +212,6 @@ export default function Home(): JSX.Element {
                 cardWidth={960}
                 cardHeight={540}
                 radius={16}
-                depth={200}
-                spread={100}
-                tilt={18}
-                visibleCards={3}
                 autoplay={true}
                 autoplayDelay={4000}
               />

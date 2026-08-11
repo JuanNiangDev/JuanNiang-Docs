@@ -6,14 +6,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: var(--dc-perspective, 1400px);
-  perspective-origin: 50% 50%;
   touch-action: pan-y;
   outline: none;
   user-select: none;
   -webkit-user-select: none;
   cursor: grab;
-  /* 稳定尺寸盒：裁剪超宽卡片，消除 autoplay 动画引发的 CLS */
+  /* 稳定尺寸盒：裁剪溢出卡片，维持 CLS */
   overflow: hidden;
 }
 
@@ -30,8 +28,7 @@
 .depthCarousel__stage {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
-  /* 稳定尺寸盒：裁剪超宽卡片，避免 autoplay 动画引发 CLS */
+  /* 裁剪溢出卡片，维持 CLS */
   overflow: hidden;
 }
 
@@ -45,9 +42,12 @@
   box-shadow:
     0 30px 60px -20px rgba(0, 0, 0, 0.65),
     0 8px 20px -10px rgba(0, 0, 0, 0.5);
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
   cursor: pointer;
-  transform: translate(-50%, -50%);
+  /* 仅合成器属性（transform/opacity）做过渡，时长/缓动由 props 注入 */
+  transition:
+    transform var(--dc-dur, 500ms) var(--dc-ease, ease),
+    opacity var(--dc-dur, 500ms) var(--dc-ease, ease);
 }
 
 .depthCarousel__img {
@@ -56,14 +56,6 @@
   object-fit: cover;
   display: block;
   -webkit-user-drag: none;
-}
-
-.depthCarousel__tint {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  mix-blend-mode: multiply;
 }
 
 .depthCarousel__arrow {
@@ -138,6 +130,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .depthCarousel__card {
+    transition: none;
     will-change: auto;
   }
   .depthCarousel__arrow,
