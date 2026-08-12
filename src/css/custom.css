@@ -28,6 +28,20 @@
   --ifm-color-primary-lightest: #63afe5;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(11, 133, 215, 0.15);
+
+  /* 特性/章节图标色：低饱和，chroma ≈ 0.15，参考品牌蓝 #0b85d7（oklch 0.60 0.156 247）饱和度 */
+  --icon-indigo:  oklch(0.585 0.15 277);
+  --icon-amber:   oklch(0.769 0.15 70);
+  --icon-pink:    oklch(0.656 0.15 354);
+  --icon-emerald: oklch(0.696 0.15 162);
+  --icon-blue:    oklch(0.623 0.15 260);
+  --icon-violet:  oklch(0.606 0.15 293);
+  --icon-cyan:    oklch(0.715 0.15 215);
+  --icon-orange:  oklch(0.705 0.15 48);
+  --icon-teal:    oklch(0.704 0.15 182);
+  --icon-green:   oklch(0.723 0.15 150);
+  --icon-fuchsia: oklch(0.667 0.15 322);
+  --icon-yellow:  oklch(0.795 0.15 86);
 }
 
 [data-theme='dark'] {
