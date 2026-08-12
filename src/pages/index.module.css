@@ -27,7 +27,7 @@
   max-width: none;
   object-fit: cover;
   object-position: center center;
-  filter: blur(12px);
+  filter: blur(8px);
 }
 
 .heroMask {
