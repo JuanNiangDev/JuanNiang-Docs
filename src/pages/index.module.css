@@ -171,64 +171,374 @@ html[data-theme='dark'] .heroMask {
   aspect-ratio: 16 / 9;
 }
 
+/* 章节标题：左对齐 + 顶部分隔线（Vite v8 border-t 语言），去掉 // 斜杠装饰 */
 .sectionTitle {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  position: relative;
+  text-align: left;
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding-top: 2rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
 }
 
-.sectionTitle::before,
-.sectionTitle::after {
-  content: '';
-  display: inline-block;
-  width: 12px;
-  height: 1.2em;
-  background: var(--ifm-color-primary);
-  transform: skewX(-20deg);
-  margin: 0 0.5em;
-  vertical-align: top;
-  position: relative;
+/* 核心特性：不规则马赛克网格（Vite v5「A shared foundation」精髓——尺寸不一但完美堆叠） */
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 30px;
 }
 
 .featureCard {
-  width: 280px;
-  height: 100%;
-  min-height: 200px;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ifm-color-emphasis-200);
+  grid-column: span 2;
+  border: 1px solid var(--feature-card-border);
   border-radius: 12px;
-  padding: 1.5rem;
-  background: var(--ifm-color-emphasis-100);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+  background: var(--feature-card-bg);
+  transition: border-color 0.2s ease;
 }
 
 .featureCard:hover {
-  border-color: var(--ifm-color-primary);
+  border-color: var(--vp-c-brand-1);
+}
+
+/* 马赛克跨度：4+2 / 3+3 / 2+4 恰好拼满 6 列，不规则但无缝隙 */
+.featureCard.span2 {
+  grid-column: span 2;
+}
+
+.featureCard.span3 {
+  grid-column: span 3;
+}
+
+.featureCard.span4 {
+  grid-column: span 4;
+}
+
+/* 响应式：窄屏/竖屏时每个特性卡独占一行 */
+@media (max-width: 900px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+  .featureCard.span2,
+  .featureCard.span3,
+  .featureCard.span4 {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 迷你示意图：固定高度，保证同一行卡片底部对齐（完美堆叠） */
+.featureVisual {
+  flex: none;
+  height: 170px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6px 20px 2px;
+  background: var(--feature-visual-bg);
+  border-bottom: 1px solid var(--feature-card-border);
+}
+
+.featureVisual svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.featureVisual svg :global(.a-rise),
+.featureVisual svg :global(.a-move),
+.featureVisual svg :global(.a-pulse),
+.featureVisual svg :global(.a-sweep),
+.featureVisual svg :global(.a-compact),
+.featureVisual svg :global(.a-draw),
+.featureVisual svg :global(.a-bar),
+.featureVisual svg :global(.a-count) {
+  will-change: transform, opacity;
+}
+
+/* 核心特性迷你示意图：代码 + hover 播放 SVG 动画（astro.build Fully Featured 风格）
+   FeatureDiagram 里的类名是字面量，故用 :global() 匹配；keyframes 名由 CSS Modules 本地化 */
+.featureVisual svg :global(.diag-brand) {
+  color: var(--ifm-color-emphasis-400);
+}
+/* Agent 模型 logo：hover 变各自品牌彩（lobe 风格） */
+.featureCard:hover .featureVisual svg :global(.m-openai) {
+  color: #10a37f;
+}
+.featureCard:hover .featureVisual svg :global(.m-anthropic) {
+  color: #d97757;
+}
+.featureCard:hover .featureVisual svg :global(.m-googlegemini) {
+  color: #4285f4;
+}
+.featureCard:hover .featureVisual svg :global(.m-deepseek) {
+  color: #4d6bfe;
+}
+.featureCard:hover .featureVisual svg :global(.m-qwen) {
+  color: #6d28d9;
+}
+.featureCard:hover .featureVisual svg :global(.m-minimax) {
+  color: #8b5cf6;
+}
+.featureCard:hover .featureVisual svg :global(.m-glm) {
+  color: #2563eb;
+}
+.featureVisual svg :global(.a-bar) {
+  transform-origin: left center;
+}
+.featureCard:hover .featureVisual svg :global(.a-flow) {
+  animation: diagFlow 2s linear infinite;
+}
+.featureCard:hover .featureVisual svg :global(.a-pulse) {
+  animation: diagPulse 2s ease-in-out infinite;
+}
+.featureCard:hover .featureVisual svg :global(.a-sweep) {
+  animation: diagSweep 3s ease-in-out 2;
+}
+.featureCard:hover .featureVisual svg :global(.a-move) {
+  animation: diagMove 3.5s linear 2;
+}
+.featureCard:hover .featureVisual svg :global(.a-rise) {
+  animation: diagRise 0.8s ease-out both;
+}
+.featureCard:hover .featureVisual svg :global(.a-draw) {
+  animation: diagDraw 3s ease-out forwards;
+}
+.featureCard:hover .featureVisual svg :global(.a-bar) {
+  animation: diagBar 2.5s ease-out forwards;
+}
+.featureCard:hover .featureVisual svg :global(.a-dot) {
+  animation: diagDot 2s ease-in-out infinite;
+}
+.featureCard:hover .featureVisual svg :global(.a-count) {
+  animation: diagCount 1.2s ease-out;
+}
+.featureCard:hover .featureVisual svg :global(.a-compact) {
+  animation: diagCompact 2s ease-in-out infinite;
+}
+.featureCard:hover .featureVisual svg :global(.a-gate) {
+  animation: diagGate 1.4s ease-in-out infinite;
+}
+/* 记忆：外框 hover 聚焦到 Compact + 持久化 */
+.featureVisual svg :global(.a-focus) {
+}
+.featureCard:hover .featureVisual svg :global(.a-focus) {
+  animation: diagFocus 1s ease-out forwards;
+}
+/* Lua：发光圆点沿连接线移动（hover 才播放） */
+.featureVisual svg :global(.a-glow) {
+  offset-path: path('M80 70 L162 70');
+  offset-distance: 0%;
+  opacity: 0;
+}
+.featureCard:hover .featureVisual svg :global(.a-glow) {
+  animation: diagGlow 1.6s linear infinite;
+  opacity: 1;
+}
+.featureVisual svg :global(.a-glow-rev) {
+  offset-path: path('M162 90 L80 90');
+  offset-distance: 0%;
+  opacity: 0;
+}
+.featureCard:hover .featureVisual svg :global(.a-glow-rev) {
+  animation: diagGlowRev 2.2s linear infinite;
+  opacity: 1;
+}
+/* Admin：折线图从x轴升起 */
+.featureCard:hover .featureVisual svg :global(.a-reveal) {
+  animation: diagReveal 1.2s ease-out forwards;
+}
+/* Admin：数字从0切换 */
+.featureCard:hover .featureVisual svg :global(.a-count-zero) {
+  animation: diagCountZero 0.5s ease-out forwards;
+}
+.featureCard:hover .featureVisual svg :global(.a-count-real) {
+  animation: diagCountReal 0.6s ease-out 0.35s forwards;
+  opacity: 0;
+}
+@keyframes diagFlow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+@keyframes diagPulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes diagSweep {
+  0% {
+    transform: translateY(0);
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(64px);
+    opacity: 0.1;
+  }
+}
+@keyframes diagMove {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(128px);
+  }
+}
+@keyframes diagRise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes diagDraw {
+  from {
+    stroke-dashoffset: 400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes diagBar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes diagDot {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes diagCount {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes diagCompact {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.06);
+  }
+}
+@keyframes diagGate {
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes diagFocus {
+  from {
+    height: 116px;
+    y: 2px;
+  }
+  to {
+    height: 48px;
+    y: 68px;
+  }
+}
+@keyframes diagGlow {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+@keyframes diagGlowRev {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+@keyframes diagReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes diagCountZero {
+  0%, 60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes diagCountReal {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+.featureMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .featureCardHeader {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
   margin-bottom: 0.75rem;
 }
 
 .featureCardHeader .featureIcon {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
+  flex: none;
 }
 
 .featureCardHeader h3 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  text-align: center;
 }
 
 .featurePoints {
@@ -251,33 +561,45 @@ html[data-theme='dark'] .heroMask {
   margin-bottom: 0.15rem;
 }
 
+/* 文档导航：VitePress VPFeature 卡 —— 发丝边框 + v8 品牌色 hover + 等高 */
 .chapterCard {
-  display: block;
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 1.5rem;
   height: 100%;
   color: inherit;
   background: var(--ifm-color-emphasis-100);
-  transition: border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 .chapterCard:hover {
-  border-color: var(--ifm-color-primary);
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-default-soft);
   text-decoration: none;
 }
 
+.chapterCard:hover h3 {
+  color: var(--vp-c-brand-1);
+}
+
 .chapterCard h3 {
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: color 0.2s ease;
 }
 
 .chapterIcon {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  display: flex;
 }
 
 .chapterCard p {
+  flex: 1;
   font-size: 0.9rem;
-  opacity: 0.85;
+  color: var(--ifm-color-emphasis-700);
   margin: 0;
 }
 
@@ -285,46 +607,93 @@ html[data-theme='dark'] .heroMask {
   .heroTitle {
     font-size: 2.2rem;
   }
+
+  /* 竖屏：表情包在上、完整介绍在下，表情包可放大 */
+  .introRow {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .introFigure {
+    order: -1;
+  }
+
+  .introHead {
+    width: 160px;
+    height: auto;
+  }
+
+  .introText {
+    flex: 1 1 auto;
+    max-width: none;
+  }
 }
 
-/* 项目介绍 + 技术栈 */
+/* 项目介绍 + 技术栈（Vite v8 极简：左对齐 + 发丝 tag） */
+/* 两栏：左文字右表情包（文字略靠右，表情包小巧，竖屏才放大） */
+.introRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  max-width: 880px;
+  margin: 0 auto 1.75rem;
+}
+
 .introText {
-  max-width: 720px;
-  margin: 0 auto 2rem;
-  text-align: center;
+  flex: 0 1 60ch;
+  max-width: 60ch;
+  margin: 0;
+  text-align: left;
   font-size: 1.05rem;
   line-height: 1.8;
   color: var(--ifm-color-emphasis-700);
 }
 
+.introFigure {
+  flex: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.introHead {
+  width: 130px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
 .techTitle {
-  text-align: center;
+  text-align: left;
   margin-bottom: 1rem;
   font-size: 1.1rem;
   font-weight: 600;
-  opacity: 0.85;
+  color: var(--ifm-color-emphasis-700);
 }
 
-.techStack {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.6rem;
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.techChip {
-  padding: 0.35rem 0.9rem;
-  font-size: 0.85rem;
-  border-radius: 999px;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  background: var(--ifm-color-emphasis-100);
-  color: var(--ifm-color-emphasis-800);
+/* 技术栈 logo 跑马灯 */
+.techLogoItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 3rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.95rem;
   white-space: nowrap;
+  transition: color 0.15s ease;
 }
 
-.techChip:hover {
-  border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-primary);
+.techLogoItem:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.techLogoItem svg,
+.techLogoItem img {
+  flex: none;
+  opacity: 0.9;
 }

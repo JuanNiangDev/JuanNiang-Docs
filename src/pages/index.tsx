@@ -6,9 +6,11 @@ import type {JSX} from 'react';
 import styles from './index.module.css';
 import {registerIconify} from '../icons/register';
 import DepthCarousel from '../components/DepthCarousel';
+import FeatureDiagram from '../components/FeatureDiagram';
 import GithubInfo from '../components/GithubInfo';
 import {Marquee, MarqueeContent, MarqueeItem, MarqueeFade} from '../components/Marquee';
 import StickerPeel from '../components/StickerPeel';
+import TechLogo from '../components/TechLogo';
 
 // 注册离线 Iconify 图标集合（幂等）
 registerIconify();
@@ -19,36 +21,48 @@ const features = [
   {
     icon: 'mdi:robot',
     color: 'var(--icon-indigo)',
+    diagram: 'agent' as const,
+    span: 'span4',
     title: 'Agent 系统',
-    points: ['基于 Eino ADK 的 ChatModelAgent', 'OpenAI 兼容，Provider / MCP / Tool / Skill / Prompt / Plugin 多模块组合', '工具调用在 ReAct 循环内同步完成'],
+    points: ['基于 Eino SDK 的 ChatModelAgent', 'OpenAI 兼容，Provider / MCP / Tool / Skill / Prompt / Plugin 多模块组合', '工具调用在 ReAct 循环内同步完成'],
   },
   {
     icon: 'mdi:lightning-bolt',
     color: 'var(--icon-amber)',
+    diagram: 'concurrency' as const,
+    span: 'span2',
     title: '异步并发处理',
     points: ['ConcurrencyManager 控制每 ChatArea 最多 8 个 Agent goroutine 并发', '事件经三阶段管线高效分流'],
   },
   {
     icon: 'mdi:brain',
     color: 'var(--icon-pink)',
+    diagram: 'memory' as const,
+    span: 'span3',
     title: '四层记忆体系',
     points: ['短期记忆（Redis 滑动窗口 + 自动 Compact）', '长期记忆（Postgres + LRU）', '技能记忆 / 会话记录，全部持久化可审计'],
   },
   {
     icon: 'mdi:puzzle',
     color: 'var(--icon-emerald)',
+    diagram: 'plugins' as const,
+    span: 'span3',
     title: 'Lua 插件系统',
     points: ['gopher-lua 驱动，多级命令 + LuaCATS SDK 代码提示', '插件商店从 GitHub 一键安装', '动态配置由 Web 面板渲染'],
   },
   {
     icon: 'mdi:monitor',
     color: 'var(--icon-blue)',
+    diagram: 'admin' as const,
+    span: 'span2',
     title: 'Web 管理后台',
     points: ['Vue 3 + Vuetify 3', 'JWT 鉴权（可选 OIDC SSO）', '管理全部配置与运行时状态，支持热切换'],
   },
   {
     icon: 'mdi:package-variant-closed',
     color: 'var(--icon-violet)',
+    diagram: 'modules' as const,
+    span: 'span4',
     title: '开箱即用模块',
     points: ['SQL 知识库 / 图床 / 表情包库', '摸鱼人日历 / 定时消息（积木式编排）', 'Postgres + Redis + Sandbox + T2I 可插拔基础设施'],
   },
@@ -57,7 +71,7 @@ const features = [
 // 首页「技术栈」区块：卷娘核心开发栈
 const techStack = [
   'Go',
-  'Eino ADK',
+  'Eino SDK',
   'OneBot11',
   'LLM（OpenAI 兼容）',
   'Vue 3',
@@ -155,19 +169,33 @@ export default function Home(): JSX.Element {
         <section className={styles.section}>
           <div className="container">
             <h2 className={styles.sectionTitle}>项目介绍</h2>
-            <p className={styles.introText}>
-              卷娘（JuanNiang）是红岩网校的吉祥物，也是本项目的名字来源。
-              本仓库为卷娘的文档站，由重庆邮电大学红岩网校工作室开发。
-              卷娘基于 <strong>Go</strong> 编写，通过 <strong>OneBot11</strong> 协议接入 QQ，
-              驱动主流大模型（LLM）实现智能对话，支持 Lua 插件扩展、Web 管理后台与自部署。
-            </p>
+            <div className={styles.introRow}>
+              <p className={styles.introText}>
+                卷娘（JuanNiang）是红岩网校的吉祥物，也是本项目的名字来源。
+                本仓库为卷娘的文档站，由重庆邮电大学红岩网校工作室开发。
+                卷娘基于 <strong>Go</strong> 编写，通过 <strong>OneBot11</strong> 协议接入 QQ，
+                驱动主流大模型（LLM）实现智能对话，支持 Lua 插件扩展、Web 管理后台与自部署。
+              </p>
+              <figure className={styles.introFigure}>
+                <img src="/img/head.webp" alt="卷娘表情包" className={styles.introHead} loading="lazy" />
+              </figure>
+            </div>
             <h3 className={styles.techTitle}>技术栈</h3>
-            <div className={styles.techStack}>
-              {techStack.map((t) => (
-                <span key={t} className={styles.techChip}>
-                  {t}
-                </span>
-              ))}
+            <div className={styles.techMarquee}>
+              <Marquee>
+                <MarqueeContent speed={28} direction="left" pauseOnHover>
+                  {techStack.map((t) => (
+                    <MarqueeItem key={t}>
+                      <span className={styles.techLogoItem}>
+                        <TechLogo name={t} />
+                        <span>{t}</span>
+                      </span>
+                    </MarqueeItem>
+                  ))}
+                </MarqueeContent>
+                <MarqueeFade side="left" />
+                <MarqueeFade side="right" />
+              </Marquee>
             </div>
           </div>
         </section>
@@ -176,29 +204,28 @@ export default function Home(): JSX.Element {
         <section className={styles.section}>
           <div className="container">
             <h2 className={styles.sectionTitle}>核心特性</h2>
-            <Marquee>
-              <MarqueeContent speed={28} direction="left">
-                {features.map((f) => (
-                  <MarqueeItem key={f.title}>
-                    <div className={styles.featureCard}>
-                      <div className={styles.featureCardHeader}>
-                        <span className={styles.featureIcon}>
-                          <Icon icon={f.icon} color={f.color} width={26} height={26} />
-                        </span>
-                        <h3>{f.title}</h3>
-                      </div>
-                      <ul className={styles.featurePoints}>
-                        {f.points.map((p, i) => (
-                          <li key={i}>{p}</li>
-                        ))}
-                      </ul>
+            <div className={styles.featureGrid}>
+              {features.map((f) => (
+                <div className={`${styles.featureCard} ${styles[f.span]}`} key={f.title}>
+                  <div className={styles.featureVisual} aria-hidden="true">
+                    <FeatureDiagram variant={f.diagram} />
+                  </div>
+                  <div className={styles.featureMeta}>
+                    <div className={styles.featureCardHeader}>
+                      <span className={styles.featureIcon}>
+                        <Icon icon={f.icon} color={f.color} width={20} height={20} />
+                      </span>
+                      <h3>{f.title}</h3>
                     </div>
-                  </MarqueeItem>
-                ))}
-              </MarqueeContent>
-              <MarqueeFade side="left" />
-              <MarqueeFade side="right" />
-            </Marquee>
+                    <ul className={styles.featurePoints}>
+                      {f.points.map((p, i) => (
+                        <li key={i}>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
