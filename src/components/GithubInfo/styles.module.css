@@ -1,9 +1,9 @@
 .card {
   display: flex;
   height: 100%;
-  border: 1px solid var(--ifm-color-emphasis-200);
+  border: 1px solid var(--feature-card-border);
   border-radius: 12px;
-  background: var(--ifm-color-emphasis-100);
+  background: var(--feature-card-bg);
   color: var(--ifm-color-emphasis-800);
   text-decoration: none !important;
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
@@ -11,9 +11,8 @@
 
 .card:hover {
   color: var(--ifm-color-emphasis-1000);
-  border-color: color-mix(in oklab, var(--ifm-color-primary) 36%, var(--ifm-color-emphasis-200));
-  background: color-mix(in oklab, var(--ifm-color-primary) 5%, var(--ifm-color-emphasis-100));
-  box-shadow: 0 1px 6px color-mix(in oklab, var(--ifm-color-primary) 10%, transparent);
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-default-soft);
 }
 
 .inner {
@@ -29,6 +28,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 10px;
+  background: var(--feature-visual-bg);
   color: var(--ifm-color-primary);
 }
 
@@ -45,9 +48,11 @@
   align-items: center;
   gap: 3px;
   margin: 0;
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
+  /* 长仓库名含连字符会在 - 处断行，强制单行，配合缩小字号避免 1080p 下换行 */
+  white-space: nowrap;
   color: var(--ifm-color-emphasis-1000);
 }
 
@@ -90,6 +95,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .statSep {

@@ -9,6 +9,8 @@ import bookOpenVariant from './book-open-variant';
 import rocketLaunch from './rocket-launch';
 import tools from './tools';
 import codeTags from './code-tags';
+import arrowRight from './arrow-right';
+import fileDocumentOutline from './file-document-outline';
 import github from './github';
 import starOutline from './star-outline';
 import sourceBranch from './source-branch';
@@ -24,6 +26,8 @@ const icons: Record<string, IconifyIcon> = {
   'rocket-launch': rocketLaunch,
   'tools': tools,
   'code-tags': codeTags,
+  'arrow-right': arrowRight,
+  'file-document-outline': fileDocumentOutline,
   'github': github,
   'star-outline': starOutline,
   'source-branch': sourceBranch,

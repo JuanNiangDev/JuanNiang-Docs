@@ -128,8 +128,11 @@
   display: block;
 }
 
-.main,
-.flap {
+/* 仅撕角交互（hover/active）时挂 will-change，静止态不占 GPU 层 */
+.container:hover .main,
+.container:active .main,
+.container:hover .flap,
+.container:active .flap {
   will-change: clip-path, transform;
 }
 
