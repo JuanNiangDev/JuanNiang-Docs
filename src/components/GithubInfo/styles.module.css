@@ -45,9 +45,11 @@
   align-items: center;
   gap: 3px;
   margin: 0;
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
+  /* 长仓库名含连字符会在 - 处断行，强制单行，配合缩小字号避免 1080p 下换行 */
+  white-space: nowrap;
   color: var(--ifm-color-emphasis-1000);
 }
 
