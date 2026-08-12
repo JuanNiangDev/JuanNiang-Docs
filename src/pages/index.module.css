@@ -164,6 +164,13 @@ html[data-theme='dark'] .heroMask {
   row-gap: 1.5rem;
 }
 
+/* 效果图区：响应式高度（16:9），窄屏由 min-height 兜底，避免固定 600px 留白过大 */
+.gallery {
+  width: 100%;
+  min-height: 320px;
+  aspect-ratio: 16 / 9;
+}
+
 .sectionTitle {
   text-align: center;
   margin-bottom: 1.5rem;

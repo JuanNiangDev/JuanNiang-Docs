@@ -206,7 +206,7 @@ export default function Home(): JSX.Element {
         <section className={styles.section}>
           <div className="container">
             <h2 className={styles.sectionTitle}>效果图</h2>
-            <div style={{ height: 600 }}>
+            <div className={styles.gallery}>
               <DepthCarousel
                 items={screenshots.map(s => ({ image: s.src, alt: s.alt }))}
                 cardWidth={960}
