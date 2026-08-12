@@ -184,13 +184,13 @@ html[data-theme='dark'] .heroMask {
 }
 
 .featureCard {
-  width: 340px;
+  width: 280px;
   height: 100%;
   min-height: 200px;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 1.5rem;
   background: var(--ifm-color-emphasis-100);
   transition: border-color 0.2s ease, transform 0.2s ease;
