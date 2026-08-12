@@ -1,9 +1,9 @@
 .card {
   display: flex;
   height: 100%;
-  border: 1px solid var(--ifm-color-emphasis-200);
+  border: 1px solid var(--feature-card-border);
   border-radius: 12px;
-  background: var(--ifm-color-emphasis-100);
+  background: var(--feature-card-bg);
   color: var(--ifm-color-emphasis-800);
   text-decoration: none !important;
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
@@ -28,6 +28,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 10px;
+  background: var(--feature-visual-bg);
   color: var(--ifm-color-primary);
 }
 

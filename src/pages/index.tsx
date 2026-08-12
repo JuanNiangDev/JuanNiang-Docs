@@ -89,6 +89,10 @@ const chapters = [
     title: '入门',
     desc: '了解项目定位与技术栈',
     to: '/docs/intro',
+    subLinks: [
+      {label: '快速开始', to: '/docs/quickstart'},
+      {label: '架构与设计', to: '/docs/development/architecture'},
+    ],
   },
   {
     icon: 'mdi:rocket-launch',
@@ -96,6 +100,10 @@ const chapters = [
     title: '快速开始',
     desc: 'Docker Compose 一键部署 + 首次启动清单',
     to: '/docs/quickstart',
+    subLinks: [
+      {label: '前置要求', to: '/docs/quickstart#前置要求'},
+      {label: '首次启动清单', to: '/docs/quickstart#首次启动清单'},
+    ],
   },
   {
     icon: 'mdi:tools',
@@ -103,6 +111,10 @@ const chapters = [
     title: '部署',
     desc: '环境变量、构建、健康检查、反代、systemd、FAQ',
     to: '/docs/deployment',
+    subLinks: [
+      {label: '环境变量', to: '/docs/deployment#环境变量'},
+      {label: '反向代理', to: '/docs/deployment#反向代理'},
+    ],
   },
   {
     icon: 'mdi:code-tags',
@@ -110,6 +122,11 @@ const chapters = [
     title: '二次开发',
     desc: '本地开发环境、架构设计、Web API',
     to: '/docs/development/setup',
+    subLinks: [
+      {label: '本地开发环境', to: '/docs/development/setup'},
+      {label: '架构与设计', to: '/docs/development/architecture'},
+      {label: 'Web API 参考', to: '/docs/development/api/intro'},
+    ],
   },
   {
     icon: 'mdi:puzzle',
@@ -117,6 +134,11 @@ const chapters = [
     title: '插件开发',
     desc: 'Lua API 参考、插件商店、示例插件',
     to: '/docs/plugins/quickstart',
+    subLinks: [
+      {label: 'Lua API 参考', to: '/docs/plugins/api-reference'},
+      {label: '插件引擎', to: '/docs/plugins/engine'},
+      {label: '插件商店', to: '/docs/plugins/store'},
+    ],
   },
   {
     icon: 'mdi:package-variant-closed',
@@ -124,6 +146,10 @@ const chapters = [
     title: '插件仓库',
     desc: 'JuanNiang-Plugins：hago CLI 与贡献指南',
     to: '/docs/plugins/repo',
+    subLinks: [
+      {label: '示例插件', to: '/docs/plugins/examples'},
+      {label: '插件商店', to: '/docs/plugins/store'},
+    ],
   },
 ];
 
@@ -253,13 +279,30 @@ export default function Home(): JSX.Element {
             <div className="row">
               {chapters.map((c) => (
                 <div className="col col--4" key={c.title}>
-                  <Link className={styles.chapterCard} to={c.to}>
-                    <div className={styles.chapterIcon}>
-                      <Icon icon={c.icon} color={c.color} width={32} height={32} />
+                  <div className={styles.chapterCard}>
+                    <Link className={styles.chapterMainLink} to={c.to}>
+                      <div className={styles.chapterHeader}>
+                        <span className={styles.chapterIcon}>
+                          <Icon icon={c.icon} color={c.color} width={32} height={32} />
+                        </span>
+                        <h3 className={styles.chapterTitle}>
+                          {c.title}
+                          <span className={styles.chapterArrow} aria-hidden="true">
+                            <Icon icon="mdi:arrow-right" width={20} height={20} />
+                          </span>
+                        </h3>
+                      </div>
+                      <p className={styles.chapterDesc}>{c.desc}</p>
+                    </Link>
+                    <div className={styles.chapterSubLinks}>
+                      {c.subLinks.map((s) => (
+                        <Link className={styles.subLinkItem} to={s.to} key={s.label}>
+                          <Icon icon="mdi:file-document-outline" width={16} height={16} />
+                          <span>{s.label}</span>
+                        </Link>
+                      ))}
                     </div>
-                    <h3>{c.title}</h3>
-                    <p>{c.desc}</p>
-                  </Link>
+                  </div>
                 </div>
               ))}
             </div>
