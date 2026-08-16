@@ -158,7 +158,7 @@ local info, err = jn.onebot11.get_group_info(987654321)
 |------|------|------|
 | `http.get(url) → table` | `{status=number, body=string}` | GET，30s 超时 |
 | `http.post(url [, content_type, body]) → table` | `{status, body}` | POST，30s 超时 |
-| `http.get_async(url [, ctx]) → number` | `req_id` | GET 异步版：立即返回，完成回调 `on_http_response`（不阻塞事件循环） |
+| `http.get_async(url [, ctx, headers]) → number` | `req_id` | GET 异步版：立即返回，完成回调 `on_http_response`（不阻塞事件循环）；可选第 3 位 `headers` 表（`{ ["User-Agent"]="...", ["Referer"]="..." }`）用于反爬/风控站点（如微信公众号） |
 | `http.post_async(url [, content_type, body, ctx]) → number` | `req_id` | POST 异步版 |
 
 ```lua
