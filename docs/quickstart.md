@@ -154,6 +154,7 @@ make run
    - T2I：[astrbot-t2i-service](https://github.com/AstrBotDevs/astrbot-t2i-service) → `docker run -itd -p 8999:8999 soulter/astrbot-t2i-service:latest`
    - Sandbox：[shipyard-neo](https://github.com/AstrBotDevs/shipyard-neo)
    - RAG：[JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service) → `make download && cargo run --release`（不部署也能跑，检索自动降级）
+   - 链路追踪（可选）：compose 内置 Tempo 服务，Grafana 添加 Tempo 数据源（`http://tempo:3200`）后在 Explore 查看单事件全流程瀑布图（详见[部署指南「链路追踪」](deployment.md#链路追踪grafana-tempo)）
    - 然后在 Web 面板对应页面填写服务地址并启用（详见[外部服务](development/external-services.md)）
 
 ## 验证部署

@@ -17,7 +17,7 @@
 <meta name="twitter:description" content="基于 OneBot11 协议的 LLM QQ 聊天 Agent，支持插件扩展与二次开发。">
 <meta name="twitter:image:alt" content="JuanNiang-Neo 项目横幅">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"JuanNiang-Neo","alternateName":"卷娘","url":"https://docs.juan.team/","description":"卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。","inLanguage":"zh-CN","publisher":{"@type":"Organization","name":"重庆邮电大学红岩网校工作室","logo":{"@type":"ImageObject","url":"https://docs.juan.team/img/banner.webp"}}}</script><link rel="stylesheet" href="/assets/css/styles.829013f4.css">
-<script src="/assets/js/runtime~main.05a8a99e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8310ddff.js" defer="defer"></script>
 <script src="/assets/js/main.6886a46a.js" defer="defer"></script>
 </head>
 <body>
@@ -59,6 +59,7 @@
 <li class="">T2I：<a href="https://github.com/AstrBotDevs/astrbot-t2i-service" target="_blank" rel="noopener noreferrer" class="">astrbot-t2i-service</a> → <code>docker run -itd -p 8999:8999 soulter/astrbot-t2i-service:latest</code></li>
 <li class="">Sandbox：<a href="https://github.com/AstrBotDevs/shipyard-neo" target="_blank" rel="noopener noreferrer" class="">shipyard-neo</a></li>
 <li class="">RAG：<a href="https://github.com/JuanNiangDev/JuanNiang-RAG-Service" target="_blank" rel="noopener noreferrer" class="">JuanNiang-RAG-Service</a> → <code>make download &amp;&amp; cargo run --release</code>（不部署也能跑，检索自动降级）</li>
+<li class="">链路追踪（可选）：compose 内置 Tempo 服务，Grafana 添加 Tempo 数据源（<code>http://tempo:3200</code>）后在 Explore 查看单事件全流程瀑布图（详见<a class="" href="/docs/deployment#%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AAgrafana-tempo">部署指南「链路追踪」</a>）</li>
 <li class="">然后在 Web 面板对应页面填写服务地址并启用（详见<a class="" href="/docs/development/external-services">外部服务</a>）</li>
 </ul>
 </li>

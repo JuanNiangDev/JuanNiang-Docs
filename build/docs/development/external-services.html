@@ -17,7 +17,7 @@
 <meta name="twitter:description" content="基于 OneBot11 协议的 LLM QQ 聊天 Agent，支持插件扩展与二次开发。">
 <meta name="twitter:image:alt" content="JuanNiang-Neo 项目横幅">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"JuanNiang-Neo","alternateName":"卷娘","url":"https://docs.juan.team/","description":"卷娘（JuanNiang）是红岩网校的吉祥物。本仓库由重庆邮电大学红岩网校工作室开发，基于 Go 与 OneBot11 协议接入大模型的 QQ 聊天 Agent，支持 Lua 插件扩展、Web 管理后台与自部署。","inLanguage":"zh-CN","publisher":{"@type":"Organization","name":"重庆邮电大学红岩网校工作室","logo":{"@type":"ImageObject","url":"https://docs.juan.team/img/banner.webp"}}}</script><link rel="stylesheet" href="/assets/css/styles.829013f4.css">
-<script src="/assets/js/runtime~main.05a8a99e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8310ddff.js" defer="defer"></script>
 <script src="/assets/js/main.6886a46a.js" defer="defer"></script>
 </head>
 <body>
@@ -158,7 +158,7 @@
 </ol>
 <h2 class="anchor anchorTargetStickyNavbar_xc_0" id="rag">RAG<a href="#rag" class="hash-link" aria-label="RAG的直接链接" title="RAG的直接链接" translate="no">​</a></h2>
 <blockquote>
-<p>RAG 向量检索服务：独立部署的 Rust 进程，bge 模型进程内推理（零外部依赖），提供文本向量化 / 语义检索 / 自动分块。仓库：<a href="https://github.com/JuanNiangDev/JuanNiang-RAG-Service" target="_blank" rel="noopener noreferrer" class="">JuanNiang-RAG-Service</a>，API 详见其 <code>docs/API.md</code>。</p>
+<p>RAG 向量检索服务：独立部署的 Rust 进程，bge 模型进程内推理（零外部依赖），提供文本向量化 / 语义检索 / 自动分块。v2 起按**分库（scoop）**物理隔离各功能块的向量。仓库：<a href="https://github.com/JuanNiangDev/JuanNiang-RAG-Service" target="_blank" rel="noopener noreferrer" class="">JuanNiang-RAG-Service</a>，API 详见其 <code>docs/API.md</code>。</p>
 </blockquote>
 <h3 class="anchor anchorTargetStickyNavbar_xc_0" id="客户端-4">客户端<a href="#客户端-4" class="hash-link" aria-label="客户端的直接链接" title="客户端的直接链接" translate="no">​</a></h3>
 <ul>
@@ -166,30 +166,32 @@
 <li class="">选项：<code>WithBaseURL</code>、<code>WithTimeout</code>（<strong>无 APIKey</strong> — RAG 不鉴权）</li>
 <li class=""><code>handler</code> 子包（package <code>caller</code>）真正 <code>Client</code>：<code>Config{BaseURL, Timeout}</code> + <code>HttpClient</code>
 <ul>
-<li class=""><code>HealthCheck</code> <code>GET /health</code>、<code>Info</code> <code>GET /info</code>（模型状态/进程内存/向量规模）</li>
-<li class=""><code>Upsert(tag, text)</code> <code>PUT /tags/{tag}</code>（幂等，长文服务端自动分块）、<code>BatchUpsert</code> <code>POST /tags/batch</code>（批量，一次嵌入推理）</li>
-<li class=""><code>Search(q, k, minScore)</code> <code>GET /tags/search</code>（按相似度返回 <code>[{tag, score}]</code>，自动加 bge 官方指令前缀）、<code>Delete(tag)</code> <code>DELETE /tags/{tag}</code></li>
+<li class=""><code>HealthCheck</code> <code>GET /health</code>、<code>Info</code> <code>GET /info</code>（模型状态/进程内存/<strong>各分库规模</strong>）</li>
+<li class=""><code>Upsert(scoop, tag, text)</code> <code>PUT /scoops/{scoop}/tags/{tag}</code>（幂等，长文服务端自动分块）、<code>BatchUpsert(scoop, items)</code> <code>POST /scoops/{scoop}/tags/batch</code>（批量，一次嵌入推理）</li>
+<li class=""><code>Search(scoop, q, k, minScore)</code> <code>GET /scoops/{scoop}/tags/search</code>（<strong>只在指定分库内检索</strong>，按相似度返回 <code>[{tag, score}]</code>，自动加 bge 官方指令前缀）、<code>Delete(scoop, tag)</code> <code>DELETE /scoops/{scoop}/tags/{tag}</code></li>
 </ul>
 </li>
-<li class=""><strong>tag 契约</strong>：Agent 侧保管原始文档与 UUID；本服务只做向量化/检索/删除。<code>tag</code> 必须为 UUID 字符串</li>
+<li class=""><strong>tag 契约</strong>：Agent 侧保管原始文档与 UUID；本服务只做向量化/检索/删除。<code>tag</code> 必须为 UUID 字符串；<strong>同一 tag 全局只允许归属一个 scoop</strong>（跨分库写入/删除 → 409，服务端归属注册表强校验，重启后自动重建）</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_xc_0" id="运行时-2">运行时<a href="#运行时-2" class="hash-link" aria-label="运行时的直接链接" title="运行时的直接链接" translate="no">​</a></h3>
 <ul>
 <li class="">启动时 <code>loadRAGFromDB</code>（<code>cmd/server/main.go</code>）读 <code>rag_configs</code> 单行（<strong>默认未启用</strong>），创建客户端后同时注入 <code>HagoCenter.RAGClient</code>（<code>atomic.Pointer</code>）与 <code>Memory.SetRAGClient</code>（Compact 双写记忆向量）；<code>Service.OnUpdateRAG</code> 回调：每次 <code>PUT /rag/config</code> 用最新配置重建 <code>*Client</code> 并注入，停用/失败置 nil（= 降级开关）</li>
 <li class="">客户端经 <code>agentOp.GetRAGClient()</code>（<code>pluggin.AgentOperator</code>）供插件动态获取，热更新即时生效</li>
-<li class=""><strong>tag 隔离</strong>：知识/记忆/群管理词条·样本·语录共用同一 RAG 实例，用 UUID v5 派生 tag 前缀隔离（<code>internal/core/ragtag</code>：<code>k:</code>/<code>m:</code>/<code>w:</code>/<code>s:</code>/<code>wt:</code>），互不污染；<code>wt:</code> 为白名单语录（命中放行），<code>s:</code> 为黑名单语录/词条派生样本</li>
+<li class=""><strong>scoop 分库</strong>：向量按功能块物理分库（4 个白名单：<code>knowledge</code> / <code>memory</code> / <code>groupmgr</code> / <code>plugin</code>，见 <code>internal/core/ragtag</code> 常量 <code>ScoopKnowledge</code> 等），<strong>检索限定在目标分库内</strong>——不同集合互不挤占 top-k，精确度不受无关数据干扰。业务 ID → tag 仍用 UUID v5 确定性派生（<code>k:</code>/<code>m:</code>/<code>s:</code>/<code>wt:</code> 前缀命名空间，写入/检索/删除/手动同步用同一函数）；分库化后<strong>候选集职责收敛</strong>为「tag → 本地 ID 反查」——如群管理 <code>buildPhraseSet</code> 维护 语录ID→派生tag 映射，检索命中后按 tag 归类黑白并反查本地行（scoop 内黑白同库，一次检索取两边最优命中）。数据按分库独立落盘 <code>data/scoops/&lt;name&gt;/</code>（每库一对 <code>index.tvim</code> + <code>tags.bin</code>）</li>
+<li class=""><strong>k 值收窄</strong>：分库化后无需再为外来集合挤占 top-k 而调大候选数——知识库/长期记忆 <code>k=10</code>、群管理黑白语录 <code>k=15</code>（旧单库版为 50/50/30）</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_xc_0" id="降级语义任何-rag-故障都不影响主流程">降级语义（任何 RAG 故障都不影响主流程）<a href="#降级语义任何-rag-故障都不影响主流程" class="hash-link" aria-label="降级语义（任何 RAG 故障都不影响主流程）的直接链接" title="降级语义（任何 RAG 故障都不影响主流程）的直接链接" translate="no">​</a></h3>
 <blockquote>
 <p>热路径（每轮对话知识注入 / 记忆召回 / 群管理核实）检索均带 <strong>1s 硬超时</strong>（与群管理 <code>ragSearchTimeout</code> 对齐），RAG 服务假死/超时自动走降级，不拖住消息链路；Compact 的记忆向量双写为<strong>异步 goroutine + 5s 快速失败</strong>，不阻塞 Agent 循环。</p>
 </blockquote>
-<table><thead><tr><th>调用方</th><th>首选</th><th>降级</th></tr></thead><tbody><tr><td>知识库检索</td><td>RAG 语义检索（命中按分数注入 ≤5 条；<code>k=50</code>）</td><td>SQL 关键词 + ILIKE 匹配（接入前行为）</td></tr><tr><td>长期记忆召回</td><td>RAG 向量语义（<code>k=50</code>）</td><td>pg_trgm gram 候选 → 最近条目（三级降级链；pg_trgm 扩展创建失败时自动回退最近条目，不阻断启动）</td></tr><tr><td>群管理违禁检测</td><td>RAG 黑白语录语义匹配（黑命中 ≥ <code>black_min_score</code> 处罚 / 白命中 ≥ <code>white_min_score</code> 放行，<code>k=30</code>）；RAG 可用但无语录命中 → 送 LLM 批量判定</td><td>关键词路径（= 旧插件行为，仅 RAG/LLM 均不可用时）</td></tr><tr><td>群管理词条/语录写入</td><td>RAG 可用时同步 Upsert（学习闭环/导入/手动同步）</td><td>未配置静默跳过、失败仅告警（<code>rag_synced</code> 仅真实写入成功才置 true）</td></tr></tbody></table>
+<table><thead><tr><th>调用方</th><th>首选</th><th>降级</th></tr></thead><tbody><tr><td>知识库检索</td><td>RAG 语义检索（命中按分数注入 ≤5 条；<code>k=10</code>，scoop <code>knowledge</code>）</td><td>SQL 关键词 + ILIKE 匹配（接入前行为）</td></tr><tr><td>长期记忆召回</td><td>RAG 向量语义（<code>k=10</code>，scoop <code>memory</code>）</td><td>pg_trgm gram 候选 → 最近条目（三级降级链；pg_trgm 扩展创建失败时自动回退最近条目，不阻断启动）</td></tr><tr><td>群管理违禁检测</td><td>RAG 黑白语录语义匹配（黑命中 ≥ <code>black_min_score</code> 处罚 / 白命中 ≥ <code>white_min_score</code> 放行，<code>k=15</code>，scoop <code>groupmgr</code>）；RAG 可用但无语录命中 → 送 LLM 批量判定</td><td>关键词路径（= 旧插件行为，仅 RAG/LLM 均不可用时）</td></tr><tr><td>群管理词条/语录写入</td><td>RAG 可用时同步 Upsert（学习闭环/导入/手动同步）</td><td>未配置静默跳过、失败仅告警（<code>rag_synced</code> 仅真实写入成功才置 true）</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_xc_0" id="接入指南-4">接入指南<a href="#接入指南-4" class="hash-link" aria-label="接入指南的直接链接" title="接入指南的直接链接" translate="no">​</a></h3>
 <ol>
 <li class="">部署 <a href="https://github.com/JuanNiangDev/JuanNiang-RAG-Service" target="_blank" rel="noopener noreferrer" class="">JuanNiang-RAG-Service</a>：<code>make download &amp;&amp; cargo run --release</code>（默认监听 <code>127.0.0.1:3000</code>，可用 <code>RAG_PORT</code> 等环境变量覆盖）</li>
 <li class="">Web 面板&quot;RAG 向量&quot;页填 <code>base_url</code>（如 <code>http://localhost:3000</code>）、<code>timeout</code>，勾&quot;启用&quot;</li>
 <li class="">知识库 / 群管理 / 记忆页面有「同步向量库」按钮手动全量同步；新增/编辑/删除自动双写双删</li>
-<li class="">插件可用 <code>jn.rag</code>（权限 <code>rag</code>）直连原始 RAG-Service（见 <a class="" href="/docs/plugins/api-reference#%E5%85%A8%E5%B1%80%E8%A1%A8-rag">插件 API 参考</a>）</li>
+<li class="">插件可用 <code>jn.rag</code>（权限 <code>rag</code>）直连原始 RAG-Service（默认写入 <code>plugin</code> 分库，见 <a class="" href="/docs/plugins/api-reference#%E5%85%A8%E5%B1%80%E8%A1%A8-rag">插件 API 参考</a>）</li>
+<li class="">可加监控：<code>GET /metrics</code>（前缀 <code>rag_</code>）接入 Prometheus，RAG 仓库自带 Grafana 面板 <code>deployment/grafana/rag-dashboard.json</code>；<code>GET /</code> 是简易<strong>无鉴权</strong> Web 控制台（分页查看各分库 tag 的 UUID/块数 + 增删/批量删除，仅限本机/内网）</li>
 </ol>
 <h2 class="anchor anchorTargetStickyNavbar_xc_0" id="一致性hagocenter-与-service-共享同指针">一致性：HagoCenter 与 Service 共享同指针<a href="#一致性hagocenter-与-service-共享同指针" class="hash-link" aria-label="一致性：HagoCenter 与 Service 共享同指针的直接链接" title="一致性：HagoCenter 与 Service 共享同指针的直接链接" translate="no">​</a></h2>
 <p>T2I 与 Sandbox 的客户端<strong>热更新关键</strong>在于 <code>HagoCenter</code> 与 <code>Service</code> <strong>共享同一个 <code>*Client</code> 指针</strong>：</p>

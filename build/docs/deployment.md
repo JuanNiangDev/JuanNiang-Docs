@@ -124,7 +124,40 @@ make download          # 下载 bge-small-zh-v1.5 GGUF 模型
 cargo run --release    # 默认监听 127.0.0.1:3000
 ```
 
-可用环境变量覆盖：`RAG_PORT` / `RAG_N_THREADS` / `RAG_MAX_CTX` 等。API 契约见其 `docs/API.md`（`PUT /tags/{tag}` upsert、`GET /tags/search` 检索、`DELETE /tags/{tag}`、`GET /health`、`GET /info`）。
+可用环境变量覆盖：`RAG_PORT` / `RAG_N_THREADS` / `RAG_DATA_DIR` / `RAG_MAX_CHUNK_CHARS` / `RAG_OVERLAP_CHARS` / `RAG_STORE_RAW_VECTORS` 等。
+
+### 分库（scoop）
+
+v2 起向量按功能块**物理分库**，检索只在目标分库内进行——不同集合互不挤占 top-k，精确度不受无关数据干扰。4 个白名单分库由服务端枚举硬编码（非法值 → 400）：
+
+| scoop | 内容 | 使用方（JuanNiang-Neo） |
+|---|---|---|
+| `knowledge` | 知识库条目 | 对话前知识召回 |
+| `memory` | 长期记忆条目 | 记忆语义召回 |
+| `groupmgr` | 群管理黑白语录/词条（黑白同库） | 违规语义核实 |
+| `plugin` | 插件 `jn.rag` 通用 API 的默认库 | Lua 插件（任意 tag） |
+
+同一 tag 只允许归属一个分库：跨分库写入/删除返回 **409**（服务端归属注册表强校验，重启后自动重建）。数据按分库独立存放于 `data/scoops/<name>/`（每库一对 `index.tvim` + `tags.bin`），备份直接复制整个 `data/` 目录。
+
+### API（v2 路由带 scoop）
+
+API 契约见其 `docs/API.md`，全部业务路由带 `/scoops/{scoop}/` 前缀：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| PUT | `/scoops/{scoop}/tags/{tag}` | upsert（`{"text": ...}`，长文自动分块） |
+| DELETE | `/scoops/{scoop}/tags/{tag}` | 删除（只能删本分库的 tag） |
+| POST | `/scoops/{scoop}/tags/batch` | 批量 upsert（一次嵌入一次发布） |
+| POST | `/scoops/{scoop}/tags/batch-delete` | 批量删除（上限 500 条） |
+| GET | `/scoops/{scoop}/tags/search` | 检索（限定分库内，返回 tag + 分数 0~1） |
+| GET | `/scoops/{scoop}/tags` | 分页列表（UUID + 块数） |
+| GET | `/health` / `/info` | 健康检查 / 服务信息（含各分库规模） |
+| GET | `/metrics` | Prometheus 指标（前缀 `rag_`） |
+| GET | `/` | 简易无鉴权 Web 控制台 |
+
+### 监控
+
+`GET /metrics` 输出 Prometheus 指标（前缀 `rag_`，覆盖 HTTP / 检索 / 写入 / 嵌入 / 各分库规模，无鉴权，公网暴露需限源 IP）；RAG 仓库自带 Grafana 面板 `deployment/grafana/rag-dashboard.json`（6 组 25 面板），Grafana → Dashboards → New → Import 上传后选 Prometheus 数据源即可。`GET /` 提供简易 Web 控制台（模型状态 + 分页查看各分库 tag 的 UUID/块数 + 增删/批量删除，仅限本机/内网）。
 
 部署后在 Web 面板「RAG 向量」页填 `base_url`（如 `http://localhost:3000`）并勾选启用；随后可在知识库 / 群管理 / 记忆页面点「同步向量库」做首次全量同步（新增/编辑/删除会自动双写双删，无需手动）。
 
@@ -151,6 +184,40 @@ scrape_configs:
 - **降级监控**：`juanniang_rag_search_errors_total`、`juanniang_message_dropped_total{reason="irrelevant"}`
 
 完整指标清单见 [Web API：适配器与会话](development/api/infra.md#9-metricsprometheus)。
+
+## 链路追踪（Grafana Tempo）
+
+机器人对**每条事件**生成一个 trace（根 span `process_event`），下游各阶段（群管理检测/RAG 核实/处罚、插件派发、相关性判断、Agent ReAct 循环、LLM 调用、工具执行、RAG 调用、审核闸门、回复发送）均为子 span——在 Grafana Tempo 里可查看单条事件处理的**全流程瀑布图**，直接定位最慢/失败的阶段。
+
+### 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | 空（禁用） | OTLP 上报地址（如 `http://tempo:4318`）；留空 = no-op 零开销 |
+| `OTEL_SERVICE_NAME` | `juan-niang-neo` | 服务名（Tempo 按 `service.name` 过滤） |
+| `OTEL_TRACE_SAMPLE_RATIO` | `1.0` | 采样率 0~1；热聊群量大可调低（如 `0.1`） |
+| `OTEL_TRACE_CAPTURE_CONTENT` | `true` | 根 span 是否记录消息内容（截断 100 字符）；敏感环境设 `false` |
+
+### 部署（docker compose）
+
+`deployments/docker-compose.yaml` 已内置 Tempo 服务（`grafana/tempo:latest`，本地磁盘存储），机器人 env 默认开启上报：
+
+```bash
+docker compose up -d --build
+# Tempo:  http://localhost:3200（Grafana 数据源）
+# OTLP:   4318（机器人自动上报，无需额外配置）
+```
+
+Grafana（独立部署或复用现有实例）添加数据源：**Tempo → `http://tempo:3200`**（Docker 网络内）或 `http://localhost:3200`（宿主机）。
+
+### 使用方式（Grafana Explore）
+
+1. 数据源选 **Tempo**，按 `service.name=juan-niang-neo` + 时间范围搜索 trace
+2. 按属性精确定位：`process_event.group_id="123456"` / `process_event.user_id` / `process_event.message_content`（内容为截断 100 字符，**精确匹配**，不支持模糊搜索）
+3. 点击 trace → 瀑布图：`llm.call` 最长通常说明模型慢，`tool.execute` 长说明工具慢，`status=error` 的 span 直接显示失败原因
+4. 排障习惯：找到一条消息 → 看 `agent.handle` 总耗时 → 逐段下钻各阶段耗时
+
+> 提示：Tempo 的属性搜索是精确值匹配；按内容模糊检索请用 Web 面板日志页（Hub）或部署 Loki。
 
 ## 健康检查
 

@@ -422,6 +422,39 @@ GET /api/v1/logs/stream → svc.StreamLogs          service.go:1634
 
 ---
 
+## 链路追踪（Grafana Tempo）
+
+基于 OpenTelemetry 的事件链路追踪（`internal/otelx`），trace 上报 Grafana Tempo，用于查看单条消息处理全流程的瀑布图与耗时分布。
+
+- **每条事件一个 trace**：`processEvent` 入口创建根 span `process_event`（`event.go`），下游各阶段均为其子 span；事件循环单 goroutine 串行，根 span 必须在事件入口新建（不复用共享 ctx）
+- **根 span 属性**：`post_type` / `message_type` / `group_id` / `user_id` / `message_id`；消息内容默认截断 100 字符记录为 `message_content`（可关）
+- **子 span 清单**（span 树即单条事件处理全流程）：
+
+| span 名 | 位置 | 说明 |
+|---------|------|------|
+| `groupmgr.detect` / `groupmgr.verify_rag` / `groupmgr.punish` | 群管理检测 | 关键词预查、RAG 黑白语义核实、处罚 |
+| `groupmgr.review_gate` | 发送前闸门 | `WaitReview` 等待审核终态（记录 `blocked`/等待毫秒） |
+| `plugin.dispatch` | Phase 1 | 插件拦截（记录 `consumed`/`skip_reply`） |
+| `relevance.check` | 相关性判断 | 批量 LLM 判断（记录候选数/结果） |
+| `agent.handle` | Agent ReAct | 全流程最长的一段（含多轮 LLM/工具） |
+| `llm.call` | LLM 统一入口 | Agent 循环/群管理审核/相关性判断共用 |
+| `tool.execute` | 工具执行 | 记录工具名 |
+| `rag.search` / `rag.upsert` / `rag.batch` / `rag.delete` | RAG 服务 | 检索/写入 span（`scoop` 分库维度） |
+| `send.reply` | 回复发送 | 记录字符数（含段间延迟风控耗时） |
+
+- **默认关闭**：`OTEL_EXPORTER_OTLP_ENDPOINT` 为空时自动 no-op（不创建 exporter/processor，零开销、零故障影响，机器人照常运行）；exporter 创建失败同样降级 no-op
+
+| 环境变量 | 说明 | 默认 |
+|----------|------|------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP 上报地址（`host:port` 或 `http://host:port`） | 空 = 禁用 |
+| `OTEL_SERVICE_NAME` | 服务名（Tempo 按 `service.name` 过滤） | `juan-niang-neo` |
+| `OTEL_TRACE_SAMPLE_RATIO` | 采样率 0~1（热聊群量大可调低） | `1.0`（全量） |
+| `OTEL_TRACE_CAPTURE_CONTENT` | 根 span 是否记录消息内容（截断 100 字符） | `true` |
+
+插件侧同样暴露自定义 Prometheus 指标：`jn.metrics` 全局表（无需权限），指标名自动加前缀 `juanniang_plugin_<插件名>_<短名>`，统一暴露在 `/metrics`（Grafana 可查）。
+
+---
+
 ## 三、EventLoop 与事件流
 
 ## 事件来源
@@ -536,10 +569,13 @@ sequenceDiagram
   EA->>EA: LLM.Chat → 工具调用(同步) → 循环
   EA-->>HM: agentResult (文本回复)
   HM->>HM: isSilenceResponse?(NO_REPLY 等) → drop
+  HM->>HM: 群管理审核闸门 ReviewGate: WaitReview<br/>(black → 丢弃回复与投递，其余放行)
   HM->>QQ: sendReply → QQ
   CM->>CM: Release(chatAreaID)
   QQ-->>U: QQ 消息回执
 ```
+
+> 回复发送前（`finish()` 闭包，`sendMu` 锁外）经群管理审核闸门（ReviewGate）：触发消息已被判违规（black）时丢弃最终回复与已投递到当前群会话的交付消息，详见「群管理检测闸门」章节。
 
 ## 群管理检测闸门（Phase 0.5，系统级）
 
@@ -563,6 +599,9 @@ flowchart TD
   PASS --> LEARN2["学习闭环: 白名单语录异步入库"]
 ```
 
+- **违规类型**：处罚分类统一为 `ad`（广告）/ `sensitive`（敏感）两类，三条处罚路径一致——RAG 黑名单直达取命中样本类别（样本契约 `ad`/`sensitive`）；LLM 追罚按优先级取分类（RAG 命中样本类别 > 关键词类别 > 卡片）；关键词兜底敏感词 → `sensitive`、黑/灰词 → `ad`（推荐卡片恒为 `ad`）
+- **修复**：LLM 追罚路径此前因 `reviewCtx` 未携带 RAG 命中样本类别，纯 RAG 语义命中被判成广告；现 `reviewCtx` 新增 `ragCategory` 字段，`handleRAGMatch` 送审时随 `ragScore`/`ragPhrase` 一并带入批窗口，LLM 判 black 时按该分类处罚（`llm.go applyVerdict`）
+- Web 语录列表展示违规类型列，添加语录可选 `ad`/`sensitive`（随 RAG 双向同步）
 - 三级惩罚：撤回+警告 → 禁言（二次违规 30min）→ 踢出（失败保留并通知管理员）；刷屏警告/复读触发发送配图话术（`//go:embed` 内嵌）；复读检测**跳过命令消息**（`/` 前缀）
 - 图片刷屏（窗口/阈值/禁言时长）、+1 复读（开关/人数）、RAG 黑白阈值（`black_min_score`/`white_min_score`）、LLM 批窗口（`llm_batch_window`，默认 3s）、排除群/白名单/统一提示词（`llm_prompt`）全部**面板可配置**（`group_mgr_configs` 单行表，保存后热重载）
 - RAG 判定**不再要求硬信号**：黑白语录双集合各自独立，黑命中处罚、白命中放行；RAG 服务可用但无语录命中（含知识/记忆向量干扰的命中）一律**送 LLM 判定**，不再误判为“RAG 不可用”降级关键词
@@ -571,6 +610,18 @@ flowchart TD
 - Web API：`/group-mgr/*`（config/phrases/samples/violations/whitelist/admins/stats/test），详见 [Web API：功能模块](api/features.md)
 - **GC 功能**：长期记忆 GC（默认 7 天，`LongTermMemory.GCIntervalDays` 面板可配）清理最近周期未召回的 5 条（PG + RAG 双删）；白名单语录 GC（默认 7 天，`white_gc_interval_days` 面板可配）清理未命中的 5 条（PG + RAG 双删）
 - 健壮性：LLM 批量判定提示词带 `<USER_TEXT>` 定界符与指令忽略声明（防注入），输出格式契约由代码内提示词固定（不依赖外部 `LLMPrompt` 是否被改）；LLM 请求失败/裁决非法时 fail-closed（有硬信号直罚，否则放行）；违规计数/统计为数据库级原子自增（并发不丢）；群成员管理员判断走 Adapter 带缓存查询（正 10min / 负 60s）；词条软删后重建同名由部分唯一索引 + 软删行复活保障
+
+### ReviewGate：发送前审核闸门
+
+LLM 审核是异步的（3s 批窗口），期间 Agent 可能已完成回复——若触发消息最终被判违规，机器人回复再被撤回观感不佳。为此 Agent 回复发送前增加审核闸门（`internal/agent/groupmgr/llm.go`）：
+
+- groupmgr 维护 `reviewVerdict` 审核终态表（`message_id → black/white/none`），TTL 10min 与 `llmReviewed` 去重表对齐清理（`applyVerdict` 落库：black=已判违规、white/none=放行、失败且无硬信号不记录）；重启丢失视为未送审放行（撤回兜底仍在）
+- `finish()`（Agent 回复发送闭包，`sendMu` 锁外执行避免持锁等待）对群消息调用 `WaitReview(ctx, groupID, userID, messageID, 5s)`（`event.go handleMessage`）：
+  - `blocked`（已判 black）→ 丢弃回复，并 `DeferredSendQueue.DropDelivery` 移除已投递到当前群会话的交付消息（私聊/其他群工具消息保留）
+  - `pending`（审核在途）→ 50ms 间隔轮询等待终态，上限 5s（`ReviewGateWait`：覆盖批窗口 3s + LLM 余量）；超时按放行处理（撤回兜底保留）
+  - 无记录 / 私聊 / 未送审（LLMReview 关闭、去重命中、重启丢失等）→ 一律放行
+- 典型延迟：Agent ReAct 循环通常比审核（3s 批窗 + LLM）慢，多数情况零等待
+- 追踪：`WaitReview` 内建 `groupmgr.review_gate` span（记录 `blocked` 与等待毫秒）
 
 ## CronJob 注入流
 

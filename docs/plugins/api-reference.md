@@ -354,6 +354,26 @@ function on_rag_response(req_id, ctx, result, err)
 end
 ```
 
+## 全局表: `metrics`
+
+权限：无需权限，默认注入。插件自定义 **Prometheus 指标**（暴露在主程序 `/metrics`，Grafana 可查）。
+指标名自动加前缀 `juanniang_plugin_<插件名>_`（插件名非法字符转 `_`，插件内只写短名）；
+同名幂等注册（返回已有句柄，计数跨插件重载延续）；短名仅允许字母/数字/下划线。
+
+| 函数 | 返回 | 说明 |
+|------|------|------|
+| `metrics.counter(name, help?) → handle, err` | 计数器 | `handle:inc()` +1；`handle:add(n)` +n（不能为负） |
+| `metrics.gauge(name, help?) → handle, err` | 仪表 | `handle:set(n)` 设置值；`handle:inc()` / `handle:add(n)` 增减 |
+| `metrics.histogram(name, help?) → handle, err` | 直方图 | `handle:observe(n)` 观测一个值（耗时/大小分布） |
+
+```lua
+-- 统计插件指标（Grafana 面板：juanniang_plugin_xxx_*）
+local msg_count = jn.metrics.counter("msg_count", "消息处理数")
+msg_count:inc()
+local latency = jn.metrics.histogram("handle_latency", "处理耗时")
+latency:observe(os.clock() - start)
+```
+
 ## 全局表: `agent`
 
 权限：`agent`。提供 Agent 配置查询与运行时管理（共 17 个函数）。
@@ -732,6 +752,7 @@ end
 | `sandbox` | `sandbox.*` |
 | `rag` | `rag.*` |
 | `agent` | `agent.*` |
+| (metrics 无需权限) | `metrics.*`（默认注入） |
 | (webhook 调用层过滤) | `on_webhook` 会被调用 |
 | (cronjob 调用层过滤) | `on_cronjob` 会被调用 |
 

@@ -173,23 +173,24 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 
 ## RAG
 
-> RAG 向量检索服务：独立部署的 Rust 进程，bge 模型进程内推理（零外部依赖），提供文本向量化 / 语义检索 / 自动分块。仓库：[JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service)，API 详见其 `docs/API.md`。
+> RAG 向量检索服务：独立部署的 Rust 进程，bge 模型进程内推理（零外部依赖），提供文本向量化 / 语义检索 / 自动分块。v2 起按**分库（scoop）**物理隔离各功能块的向量。仓库：[JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service)，API 详见其 `docs/API.md`。
 
 ### 客户端
 
 - 包 `infrastructure/rag`（构造 `*handler.Client`），`NewClient(opts...)` 强制 `HealthCheck()` 通过才返回成功
 - 选项：`WithBaseURL`、`WithTimeout`（**无 APIKey** — RAG 不鉴权）
 - `handler` 子包（package `caller`）真正 `Client`：`Config{BaseURL, Timeout}` + `HttpClient`
-  - `HealthCheck` `GET /health`、`Info` `GET /info`（模型状态/进程内存/向量规模）
-  - `Upsert(tag, text)` `PUT /tags/{tag}`（幂等，长文服务端自动分块）、`BatchUpsert` `POST /tags/batch`（批量，一次嵌入推理）
-  - `Search(q, k, minScore)` `GET /tags/search`（按相似度返回 `[{tag, score}]`，自动加 bge 官方指令前缀）、`Delete(tag)` `DELETE /tags/{tag}`
-- **tag 契约**：Agent 侧保管原始文档与 UUID；本服务只做向量化/检索/删除。`tag` 必须为 UUID 字符串
+  - `HealthCheck` `GET /health`、`Info` `GET /info`（模型状态/进程内存/**各分库规模**）
+  - `Upsert(scoop, tag, text)` `PUT /scoops/{scoop}/tags/{tag}`（幂等，长文服务端自动分块）、`BatchUpsert(scoop, items)` `POST /scoops/{scoop}/tags/batch`（批量，一次嵌入推理）
+  - `Search(scoop, q, k, minScore)` `GET /scoops/{scoop}/tags/search`（**只在指定分库内检索**，按相似度返回 `[{tag, score}]`，自动加 bge 官方指令前缀）、`Delete(scoop, tag)` `DELETE /scoops/{scoop}/tags/{tag}`
+- **tag 契约**：Agent 侧保管原始文档与 UUID；本服务只做向量化/检索/删除。`tag` 必须为 UUID 字符串；**同一 tag 全局只允许归属一个 scoop**（跨分库写入/删除 → 409，服务端归属注册表强校验，重启后自动重建）
 
 ### 运行时
 
 - 启动时 `loadRAGFromDB`（`cmd/server/main.go`）读 `rag_configs` 单行（**默认未启用**），创建客户端后同时注入 `HagoCenter.RAGClient`（`atomic.Pointer`）与 `Memory.SetRAGClient`（Compact 双写记忆向量）；`Service.OnUpdateRAG` 回调：每次 `PUT /rag/config` 用最新配置重建 `*Client` 并注入，停用/失败置 nil（= 降级开关）
 - 客户端经 `agentOp.GetRAGClient()`（`pluggin.AgentOperator`）供插件动态获取，热更新即时生效
-- **tag 隔离**：知识/记忆/群管理词条·样本·语录共用同一 RAG 实例，用 UUID v5 派生 tag 前缀隔离（`internal/core/ragtag`：`k:`/`m:`/`w:`/`s:`/`wt:`），互不污染；`wt:` 为白名单语录（命中放行），`s:` 为黑名单语录/词条派生样本
+- **scoop 分库**：向量按功能块物理分库（4 个白名单：`knowledge` / `memory` / `groupmgr` / `plugin`，见 `internal/core/ragtag` 常量 `ScoopKnowledge` 等），**检索限定在目标分库内**——不同集合互不挤占 top-k，精确度不受无关数据干扰。业务 ID → tag 仍用 UUID v5 确定性派生（`k:`/`m:`/`s:`/`wt:` 前缀命名空间，写入/检索/删除/手动同步用同一函数）；分库化后**候选集职责收敛**为「tag → 本地 ID 反查」——如群管理 `buildPhraseSet` 维护 语录ID→派生tag 映射，检索命中后按 tag 归类黑白并反查本地行（scoop 内黑白同库，一次检索取两边最优命中）。数据按分库独立落盘 `data/scoops/<name>/`（每库一对 `index.tvim` + `tags.bin`）
+- **k 值收窄**：分库化后无需再为外来集合挤占 top-k 而调大候选数——知识库/长期记忆 `k=10`、群管理黑白语录 `k=15`（旧单库版为 50/50/30）
 
 ### 降级语义（任何 RAG 故障都不影响主流程）
 
@@ -197,9 +198,9 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 
 | 调用方 | 首选 | 降级 |
 |--------|------|------|
-| 知识库检索 | RAG 语义检索（命中按分数注入 ≤5 条；`k=50`） | SQL 关键词 + ILIKE 匹配（接入前行为） |
-| 长期记忆召回 | RAG 向量语义（`k=50`） | pg_trgm gram 候选 → 最近条目（三级降级链；pg_trgm 扩展创建失败时自动回退最近条目，不阻断启动） |
-| 群管理违禁检测 | RAG 黑白语录语义匹配（黑命中 ≥ `black_min_score` 处罚 / 白命中 ≥ `white_min_score` 放行，`k=30`）；RAG 可用但无语录命中 → 送 LLM 批量判定 | 关键词路径（= 旧插件行为，仅 RAG/LLM 均不可用时） |
+| 知识库检索 | RAG 语义检索（命中按分数注入 ≤5 条；`k=10`，scoop `knowledge`） | SQL 关键词 + ILIKE 匹配（接入前行为） |
+| 长期记忆召回 | RAG 向量语义（`k=10`，scoop `memory`） | pg_trgm gram 候选 → 最近条目（三级降级链；pg_trgm 扩展创建失败时自动回退最近条目，不阻断启动） |
+| 群管理违禁检测 | RAG 黑白语录语义匹配（黑命中 ≥ `black_min_score` 处罚 / 白命中 ≥ `white_min_score` 放行，`k=15`，scoop `groupmgr`）；RAG 可用但无语录命中 → 送 LLM 批量判定 | 关键词路径（= 旧插件行为，仅 RAG/LLM 均不可用时） |
 | 群管理词条/语录写入 | RAG 可用时同步 Upsert（学习闭环/导入/手动同步） | 未配置静默跳过、失败仅告警（`rag_synced` 仅真实写入成功才置 true） |
 
 ### 接入指南
@@ -207,7 +208,8 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 1. 部署 [JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service)：`make download && cargo run --release`（默认监听 `127.0.0.1:3000`，可用 `RAG_PORT` 等环境变量覆盖）
 2. Web 面板"RAG 向量"页填 `base_url`（如 `http://localhost:3000`）、`timeout`，勾"启用"
 3. 知识库 / 群管理 / 记忆页面有「同步向量库」按钮手动全量同步；新增/编辑/删除自动双写双删
-4. 插件可用 `jn.rag`（权限 `rag`）直连原始 RAG-Service（见 [插件 API 参考](../plugins/api-reference.md#全局表-rag)）
+4. 插件可用 `jn.rag`（权限 `rag`）直连原始 RAG-Service（默认写入 `plugin` 分库，见 [插件 API 参考](../plugins/api-reference.md#全局表-rag)）
+5. 可加监控：`GET /metrics`（前缀 `rag_`）接入 Prometheus，RAG 仓库自带 Grafana 面板 `deployment/grafana/rag-dashboard.json`；`GET /` 是简易**无鉴权** Web 控制台（分页查看各分库 tag 的 UUID/块数 + 增删/批量删除，仅限本机/内网）
 
 ## 一致性：HagoCenter 与 Service 共享同指针
 

@@ -128,7 +128,40 @@ make download          # 下载 bge-small-zh-v1.5 GGUF 模型
 cargo run --release    # 默认监听 127.0.0.1:3000
 ```
 
-可用环境变量覆盖：`RAG_PORT` / `RAG_N_THREADS` / `RAG_MAX_CTX` 等。API 契约见其 `docs/API.md`（`PUT /tags/{tag}` upsert、`GET /tags/search` 检索、`DELETE /tags/{tag}`、`GET /health`、`GET /info`）。
+可用环境变量覆盖：`RAG_PORT` / `RAG_N_THREADS` / `RAG_DATA_DIR` / `RAG_MAX_CHUNK_CHARS` / `RAG_OVERLAP_CHARS` / `RAG_STORE_RAW_VECTORS` 等。
+
+### 分库（scoop）
+
+v2 起向量按功能块**物理分库**，检索只在目标分库内进行——不同集合互不挤占 top-k，精确度不受无关数据干扰。4 个白名单分库由服务端枚举硬编码（非法值 → 400）：
+
+| scoop | 内容 | 使用方（JuanNiang-Neo） |
+|---|---|---|
+| `knowledge` | 知识库条目 | 对话前知识召回 |
+| `memory` | 长期记忆条目 | 记忆语义召回 |
+| `groupmgr` | 群管理黑白语录/词条（黑白同库） | 违规语义核实 |
+| `plugin` | 插件 `jn.rag` 通用 API 的默认库 | Lua 插件（任意 tag） |
+
+同一 tag 只允许归属一个分库：跨分库写入/删除返回 **409**（服务端归属注册表强校验，重启后自动重建）。数据按分库独立存放于 `data/scoops/<name>/`（每库一对 `index.tvim` + `tags.bin`），备份直接复制整个 `data/` 目录。
+
+### API（v2 路由带 scoop）
+
+API 契约见其 `docs/API.md`，全部业务路由带 `/scoops/{scoop}/` 前缀：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| PUT | `/scoops/{scoop}/tags/{tag}` | upsert（`{"text": ...}`，长文自动分块） |
+| DELETE | `/scoops/{scoop}/tags/{tag}` | 删除（只能删本分库的 tag） |
+| POST | `/scoops/{scoop}/tags/batch` | 批量 upsert（一次嵌入一次发布） |
+| POST | `/scoops/{scoop}/tags/batch-delete` | 批量删除（上限 500 条） |
+| GET | `/scoops/{scoop}/tags/search` | 检索（限定分库内，返回 tag + 分数 0~1） |
+| GET | `/scoops/{scoop}/tags` | 分页列表（UUID + 块数） |
+| GET | `/health` / `/info` | 健康检查 / 服务信息（含各分库规模） |
+| GET | `/metrics` | Prometheus 指标（前缀 `rag_`） |
+| GET | `/` | 简易无鉴权 Web 控制台 |
+
+### 监控
+
+`GET /metrics` 输出 Prometheus 指标（前缀 `rag_`，覆盖 HTTP / 检索 / 写入 / 嵌入 / 各分库规模，无鉴权，公网暴露需限源 IP）；RAG 仓库自带 Grafana 面板 `deployment/grafana/rag-dashboard.json`（6 组 25 面板），Grafana → Dashboards → New → Import 上传后选 Prometheus 数据源即可。`GET /` 提供简易 Web 控制台（模型状态 + 分页查看各分库 tag 的 UUID/块数 + 增删/批量删除，仅限本机/内网）。
 
 部署后在 Web 面板「RAG 向量」页填 `base_url`（如 `http://localhost:3000`）并勾选启用；随后可在知识库 / 群管理 / 记忆页面点「同步向量库」做首次全量同步（新增/编辑/删除会自动双写双删，无需手动）。
 
@@ -155,6 +188,40 @@ scrape_configs:
 - **降级监控**：`juanniang_rag_search_errors_total`、`juanniang_message_dropped_total{reason="irrelevant"}`
 
 完整指标清单见 [Web API：适配器与会话](development/api/infra.md#9-metricsprometheus)。
+
+## 链路追踪（Grafana Tempo）
+
+机器人对**每条事件**生成一个 trace（根 span `process_event`），下游各阶段（群管理检测/RAG 核实/处罚、插件派发、相关性判断、Agent ReAct 循环、LLM 调用、工具执行、RAG 调用、审核闸门、回复发送）均为子 span——在 Grafana Tempo 里可查看单条事件处理的**全流程瀑布图**，直接定位最慢/失败的阶段。
+
+### 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | 空（禁用） | OTLP 上报地址（如 `http://tempo:4318`）；留空 = no-op 零开销 |
+| `OTEL_SERVICE_NAME` | `juan-niang-neo` | 服务名（Tempo 按 `service.name` 过滤） |
+| `OTEL_TRACE_SAMPLE_RATIO` | `1.0` | 采样率 0~1；热聊群量大可调低（如 `0.1`） |
+| `OTEL_TRACE_CAPTURE_CONTENT` | `true` | 根 span 是否记录消息内容（截断 100 字符）；敏感环境设 `false` |
+
+### 部署（docker compose）
+
+`deployments/docker-compose.yaml` 已内置 Tempo 服务（`grafana/tempo:latest`，本地磁盘存储），机器人 env 默认开启上报：
+
+```bash
+docker compose up -d --build
+# Tempo:  http://localhost:3200（Grafana 数据源）
+# OTLP:   4318（机器人自动上报，无需额外配置）
+```
+
+Grafana（独立部署或复用现有实例）添加数据源：**Tempo → `http://tempo:3200`**（Docker 网络内）或 `http://localhost:3200`（宿主机）。
+
+### 使用方式（Grafana Explore）
+
+1. 数据源选 **Tempo**，按 `service.name=juan-niang-neo` + 时间范围搜索 trace
+2. 按属性精确定位：`process_event.group_id="123456"` / `process_event.user_id` / `process_event.message_content`（内容为截断 100 字符，**精确匹配**，不支持模糊搜索）
+3. 点击 trace → 瀑布图：`llm.call` 最长通常说明模型慢，`tool.execute` 长说明工具慢，`status=error` 的 span 直接显示失败原因
+4. 排障习惯：找到一条消息 → 看 `agent.handle` 总耗时 → 逐段下钻各阶段耗时
+
+> 提示：Tempo 的属性搜索是精确值匹配；按内容模糊检索请用 Web 面板日志页（Hub）或部署 Loki。
 
 ## 健康检查
 
@@ -1836,6 +1903,39 @@ GET /api/v1/logs/stream → svc.StreamLogs          service.go:1634
 
 ---
 
+## 链路追踪（Grafana Tempo）
+
+基于 OpenTelemetry 的事件链路追踪（`internal/otelx`），trace 上报 Grafana Tempo，用于查看单条消息处理全流程的瀑布图与耗时分布。
+
+- **每条事件一个 trace**：`processEvent` 入口创建根 span `process_event`（`event.go`），下游各阶段均为其子 span；事件循环单 goroutine 串行，根 span 必须在事件入口新建（不复用共享 ctx）
+- **根 span 属性**：`post_type` / `message_type` / `group_id` / `user_id` / `message_id`；消息内容默认截断 100 字符记录为 `message_content`（可关）
+- **子 span 清单**（span 树即单条事件处理全流程）：
+
+| span 名 | 位置 | 说明 |
+|---------|------|------|
+| `groupmgr.detect` / `groupmgr.verify_rag` / `groupmgr.punish` | 群管理检测 | 关键词预查、RAG 黑白语义核实、处罚 |
+| `groupmgr.review_gate` | 发送前闸门 | `WaitReview` 等待审核终态（记录 `blocked`/等待毫秒） |
+| `plugin.dispatch` | Phase 1 | 插件拦截（记录 `consumed`/`skip_reply`） |
+| `relevance.check` | 相关性判断 | 批量 LLM 判断（记录候选数/结果） |
+| `agent.handle` | Agent ReAct | 全流程最长的一段（含多轮 LLM/工具） |
+| `llm.call` | LLM 统一入口 | Agent 循环/群管理审核/相关性判断共用 |
+| `tool.execute` | 工具执行 | 记录工具名 |
+| `rag.search` / `rag.upsert` / `rag.batch` / `rag.delete` | RAG 服务 | 检索/写入 span（`scoop` 分库维度） |
+| `send.reply` | 回复发送 | 记录字符数（含段间延迟风控耗时） |
+
+- **默认关闭**：`OTEL_EXPORTER_OTLP_ENDPOINT` 为空时自动 no-op（不创建 exporter/processor，零开销、零故障影响，机器人照常运行）；exporter 创建失败同样降级 no-op
+
+| 环境变量 | 说明 | 默认 |
+|----------|------|------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP 上报地址（`host:port` 或 `http://host:port`） | 空 = 禁用 |
+| `OTEL_SERVICE_NAME` | 服务名（Tempo 按 `service.name` 过滤） | `juan-niang-neo` |
+| `OTEL_TRACE_SAMPLE_RATIO` | 采样率 0~1（热聊群量大可调低） | `1.0`（全量） |
+| `OTEL_TRACE_CAPTURE_CONTENT` | 根 span 是否记录消息内容（截断 100 字符） | `true` |
+
+插件侧同样暴露自定义 Prometheus 指标：`jn.metrics` 全局表（无需权限），指标名自动加前缀 `juanniang_plugin_<插件名>_<短名>`，统一暴露在 `/metrics`（Grafana 可查）。
+
+---
+
 ## 三、EventLoop 与事件流
 
 ## 事件来源
@@ -1950,10 +2050,13 @@ sequenceDiagram
   EA->>EA: LLM.Chat → 工具调用(同步) → 循环
   EA-->>HM: agentResult (文本回复)
   HM->>HM: isSilenceResponse?(NO_REPLY 等) → drop
+  HM->>HM: 群管理审核闸门 ReviewGate: WaitReview<br/>(black → 丢弃回复与投递，其余放行)
   HM->>QQ: sendReply → QQ
   CM->>CM: Release(chatAreaID)
   QQ-->>U: QQ 消息回执
 ```
+
+> 回复发送前（`finish()` 闭包，`sendMu` 锁外）经群管理审核闸门（ReviewGate）：触发消息已被判违规（black）时丢弃最终回复与已投递到当前群会话的交付消息，详见「群管理检测闸门」章节。
 
 ## 群管理检测闸门（Phase 0.5，系统级）
 
@@ -1977,6 +2080,9 @@ flowchart TD
   PASS --> LEARN2["学习闭环: 白名单语录异步入库"]
 ```
 
+- **违规类型**：处罚分类统一为 `ad`（广告）/ `sensitive`（敏感）两类，三条处罚路径一致——RAG 黑名单直达取命中样本类别（样本契约 `ad`/`sensitive`）；LLM 追罚按优先级取分类（RAG 命中样本类别 > 关键词类别 > 卡片）；关键词兜底敏感词 → `sensitive`、黑/灰词 → `ad`（推荐卡片恒为 `ad`）
+- **修复**：LLM 追罚路径此前因 `reviewCtx` 未携带 RAG 命中样本类别，纯 RAG 语义命中被判成广告；现 `reviewCtx` 新增 `ragCategory` 字段，`handleRAGMatch` 送审时随 `ragScore`/`ragPhrase` 一并带入批窗口，LLM 判 black 时按该分类处罚（`llm.go applyVerdict`）
+- Web 语录列表展示违规类型列，添加语录可选 `ad`/`sensitive`（随 RAG 双向同步）
 - 三级惩罚：撤回+警告 → 禁言（二次违规 30min）→ 踢出（失败保留并通知管理员）；刷屏警告/复读触发发送配图话术（`//go:embed` 内嵌）；复读检测**跳过命令消息**（`/` 前缀）
 - 图片刷屏（窗口/阈值/禁言时长）、+1 复读（开关/人数）、RAG 黑白阈值（`black_min_score`/`white_min_score`）、LLM 批窗口（`llm_batch_window`，默认 3s）、排除群/白名单/统一提示词（`llm_prompt`）全部**面板可配置**（`group_mgr_configs` 单行表，保存后热重载）
 - RAG 判定**不再要求硬信号**：黑白语录双集合各自独立，黑命中处罚、白命中放行；RAG 服务可用但无语录命中（含知识/记忆向量干扰的命中）一律**送 LLM 判定**，不再误判为“RAG 不可用”降级关键词
@@ -1985,6 +2091,18 @@ flowchart TD
 - Web API：`/group-mgr/*`（config/phrases/samples/violations/whitelist/admins/stats/test），详见 [Web API：功能模块](api/features.md)
 - **GC 功能**：长期记忆 GC（默认 7 天，`LongTermMemory.GCIntervalDays` 面板可配）清理最近周期未召回的 5 条（PG + RAG 双删）；白名单语录 GC（默认 7 天，`white_gc_interval_days` 面板可配）清理未命中的 5 条（PG + RAG 双删）
 - 健壮性：LLM 批量判定提示词带 `<USER_TEXT>` 定界符与指令忽略声明（防注入），输出格式契约由代码内提示词固定（不依赖外部 `LLMPrompt` 是否被改）；LLM 请求失败/裁决非法时 fail-closed（有硬信号直罚，否则放行）；违规计数/统计为数据库级原子自增（并发不丢）；群成员管理员判断走 Adapter 带缓存查询（正 10min / 负 60s）；词条软删后重建同名由部分唯一索引 + 软删行复活保障
+
+### ReviewGate：发送前审核闸门
+
+LLM 审核是异步的（3s 批窗口），期间 Agent 可能已完成回复——若触发消息最终被判违规，机器人回复再被撤回观感不佳。为此 Agent 回复发送前增加审核闸门（`internal/agent/groupmgr/llm.go`）：
+
+- groupmgr 维护 `reviewVerdict` 审核终态表（`message_id → black/white/none`），TTL 10min 与 `llmReviewed` 去重表对齐清理（`applyVerdict` 落库：black=已判违规、white/none=放行、失败且无硬信号不记录）；重启丢失视为未送审放行（撤回兜底仍在）
+- `finish()`（Agent 回复发送闭包，`sendMu` 锁外执行避免持锁等待）对群消息调用 `WaitReview(ctx, groupID, userID, messageID, 5s)`（`event.go handleMessage`）：
+  - `blocked`（已判 black）→ 丢弃回复，并 `DeferredSendQueue.DropDelivery` 移除已投递到当前群会话的交付消息（私聊/其他群工具消息保留）
+  - `pending`（审核在途）→ 50ms 间隔轮询等待终态，上限 5s（`ReviewGateWait`：覆盖批窗口 3s + LLM 余量）；超时按放行处理（撤回兜底保留）
+  - 无记录 / 私聊 / 未送审（LLMReview 关闭、去重命中、重启丢失等）→ 一律放行
+- 典型延迟：Agent ReAct 循环通常比审核（3s 批窗 + LLM）慢，多数情况零等待
+- 追踪：`WaitReview` 内建 `groupmgr.review_gate` span（记录 `blocked` 与等待毫秒）
 
 ## CronJob 注入流
 
@@ -2650,23 +2768,24 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 
 ## RAG
 
-> RAG 向量检索服务：独立部署的 Rust 进程，bge 模型进程内推理（零外部依赖），提供文本向量化 / 语义检索 / 自动分块。仓库：[JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service)，API 详见其 `docs/API.md`。
+> RAG 向量检索服务：独立部署的 Rust 进程，bge 模型进程内推理（零外部依赖），提供文本向量化 / 语义检索 / 自动分块。v2 起按**分库（scoop）**物理隔离各功能块的向量。仓库：[JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service)，API 详见其 `docs/API.md`。
 
 ### 客户端
 
 - 包 `infrastructure/rag`（构造 `*handler.Client`），`NewClient(opts...)` 强制 `HealthCheck()` 通过才返回成功
 - 选项：`WithBaseURL`、`WithTimeout`（**无 APIKey** — RAG 不鉴权）
 - `handler` 子包（package `caller`）真正 `Client`：`Config{BaseURL, Timeout}` + `HttpClient`
-  - `HealthCheck` `GET /health`、`Info` `GET /info`（模型状态/进程内存/向量规模）
-  - `Upsert(tag, text)` `PUT /tags/{tag}`（幂等，长文服务端自动分块）、`BatchUpsert` `POST /tags/batch`（批量，一次嵌入推理）
-  - `Search(q, k, minScore)` `GET /tags/search`（按相似度返回 `[{tag, score}]`，自动加 bge 官方指令前缀）、`Delete(tag)` `DELETE /tags/{tag}`
-- **tag 契约**：Agent 侧保管原始文档与 UUID；本服务只做向量化/检索/删除。`tag` 必须为 UUID 字符串
+  - `HealthCheck` `GET /health`、`Info` `GET /info`（模型状态/进程内存/**各分库规模**）
+  - `Upsert(scoop, tag, text)` `PUT /scoops/{scoop}/tags/{tag}`（幂等，长文服务端自动分块）、`BatchUpsert(scoop, items)` `POST /scoops/{scoop}/tags/batch`（批量，一次嵌入推理）
+  - `Search(scoop, q, k, minScore)` `GET /scoops/{scoop}/tags/search`（**只在指定分库内检索**，按相似度返回 `[{tag, score}]`，自动加 bge 官方指令前缀）、`Delete(scoop, tag)` `DELETE /scoops/{scoop}/tags/{tag}`
+- **tag 契约**：Agent 侧保管原始文档与 UUID；本服务只做向量化/检索/删除。`tag` 必须为 UUID 字符串；**同一 tag 全局只允许归属一个 scoop**（跨分库写入/删除 → 409，服务端归属注册表强校验，重启后自动重建）
 
 ### 运行时
 
 - 启动时 `loadRAGFromDB`（`cmd/server/main.go`）读 `rag_configs` 单行（**默认未启用**），创建客户端后同时注入 `HagoCenter.RAGClient`（`atomic.Pointer`）与 `Memory.SetRAGClient`（Compact 双写记忆向量）；`Service.OnUpdateRAG` 回调：每次 `PUT /rag/config` 用最新配置重建 `*Client` 并注入，停用/失败置 nil（= 降级开关）
 - 客户端经 `agentOp.GetRAGClient()`（`pluggin.AgentOperator`）供插件动态获取，热更新即时生效
-- **tag 隔离**：知识/记忆/群管理词条·样本·语录共用同一 RAG 实例，用 UUID v5 派生 tag 前缀隔离（`internal/core/ragtag`：`k:`/`m:`/`w:`/`s:`/`wt:`），互不污染；`wt:` 为白名单语录（命中放行），`s:` 为黑名单语录/词条派生样本
+- **scoop 分库**：向量按功能块物理分库（4 个白名单：`knowledge` / `memory` / `groupmgr` / `plugin`，见 `internal/core/ragtag` 常量 `ScoopKnowledge` 等），**检索限定在目标分库内**——不同集合互不挤占 top-k，精确度不受无关数据干扰。业务 ID → tag 仍用 UUID v5 确定性派生（`k:`/`m:`/`s:`/`wt:` 前缀命名空间，写入/检索/删除/手动同步用同一函数）；分库化后**候选集职责收敛**为「tag → 本地 ID 反查」——如群管理 `buildPhraseSet` 维护 语录ID→派生tag 映射，检索命中后按 tag 归类黑白并反查本地行（scoop 内黑白同库，一次检索取两边最优命中）。数据按分库独立落盘 `data/scoops/<name>/`（每库一对 `index.tvim` + `tags.bin`）
+- **k 值收窄**：分库化后无需再为外来集合挤占 top-k 而调大候选数——知识库/长期记忆 `k=10`、群管理黑白语录 `k=15`（旧单库版为 50/50/30）
 
 ### 降级语义（任何 RAG 故障都不影响主流程）
 
@@ -2674,9 +2793,9 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 
 | 调用方 | 首选 | 降级 |
 |--------|------|------|
-| 知识库检索 | RAG 语义检索（命中按分数注入 ≤5 条；`k=50`） | SQL 关键词 + ILIKE 匹配（接入前行为） |
-| 长期记忆召回 | RAG 向量语义（`k=50`） | pg_trgm gram 候选 → 最近条目（三级降级链；pg_trgm 扩展创建失败时自动回退最近条目，不阻断启动） |
-| 群管理违禁检测 | RAG 黑白语录语义匹配（黑命中 ≥ `black_min_score` 处罚 / 白命中 ≥ `white_min_score` 放行，`k=30`）；RAG 可用但无语录命中 → 送 LLM 批量判定 | 关键词路径（= 旧插件行为，仅 RAG/LLM 均不可用时） |
+| 知识库检索 | RAG 语义检索（命中按分数注入 ≤5 条；`k=10`，scoop `knowledge`） | SQL 关键词 + ILIKE 匹配（接入前行为） |
+| 长期记忆召回 | RAG 向量语义（`k=10`，scoop `memory`） | pg_trgm gram 候选 → 最近条目（三级降级链；pg_trgm 扩展创建失败时自动回退最近条目，不阻断启动） |
+| 群管理违禁检测 | RAG 黑白语录语义匹配（黑命中 ≥ `black_min_score` 处罚 / 白命中 ≥ `white_min_score` 放行，`k=15`，scoop `groupmgr`）；RAG 可用但无语录命中 → 送 LLM 批量判定 | 关键词路径（= 旧插件行为，仅 RAG/LLM 均不可用时） |
 | 群管理词条/语录写入 | RAG 可用时同步 Upsert（学习闭环/导入/手动同步） | 未配置静默跳过、失败仅告警（`rag_synced` 仅真实写入成功才置 true） |
 
 ### 接入指南
@@ -2684,7 +2803,8 @@ builtin 工具名（如 `send_group_msg`）可能与 MCP 工具同名并同时�
 1. 部署 [JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service)：`make download && cargo run --release`（默认监听 `127.0.0.1:3000`，可用 `RAG_PORT` 等环境变量覆盖）
 2. Web 面板"RAG 向量"页填 `base_url`（如 `http://localhost:3000`）、`timeout`，勾"启用"
 3. 知识库 / 群管理 / 记忆页面有「同步向量库」按钮手动全量同步；新增/编辑/删除自动双写双删
-4. 插件可用 `jn.rag`（权限 `rag`）直连原始 RAG-Service（见 [插件 API 参考](../plugins/api-reference.md#全局表-rag)）
+4. 插件可用 `jn.rag`（权限 `rag`）直连原始 RAG-Service（默认写入 `plugin` 分库，见 [插件 API 参考](../plugins/api-reference.md#全局表-rag)）
+5. 可加监控：`GET /metrics`（前缀 `rag_`）接入 Prometheus，RAG 仓库自带 Grafana 面板 `deployment/grafana/rag-dashboard.json`；`GET /` 是简易**无鉴权** Web 控制台（分页查看各分库 tag 的 UUID/块数 + 增删/批量删除，仅限本机/内网）
 
 ## 一致性：HagoCenter 与 Service 共享同指针
 
@@ -5058,7 +5178,7 @@ git reset --hard <commit-hash>
 - **四层记忆体系**：短期记忆（Redis 滑动窗口，默认 100 条，自动 Compact）/ 长期记忆（Postgres + RAG 语义召回，降级 pg_trgm 相似度匹配）/ 技能记忆（SkillMemory，Compact 时自动提取）/ 会话记录（Postgres 审计）
 - **RAG 语义检索**：对接独立 RAG-Service（bge 进程内推理），知识库检索、长期记忆召回、群管理违禁核实均以 RAG 语义匹配为**首选**，未配置/故障自动降级不阻塞主流程
 - **OneBot11 反向 WebSocket 适配器**：与 QQ 机器人框架对接，OneBot11 API 作为 Agent 工具注册
-- **Lua 插件系统**：gopher-lua 驱动，支持多级命令、Lua SDK（带 LuaCATS 注解）、插件目录文本文件读写（`jn.file`）、系统插件保护
+- **Lua 插件系统**：gopher-lua 驱动，支持多级命令、Lua SDK（带 LuaCATS 注解）、插件目录文本文件读写（`jn.file`）、系统插件保护；插件可自定义 Prometheus 指标（`jn.metrics`，自动 `juanniang_plugin_<插件名>_` 前缀）
 - **插件商店**：从 GitHub 仓库浏览/安装社区插件（统一 5 件套格式），国内镜像源手动选择 + 连通性测试，每晚自动更新元数据；插件动态配置（bool/string/list）由 Web 面板按 `config.yaml` 动态渲染
 - **Web 管理后台**：Vue 3 + Vuetify 3，JWT 鉴权（可选 OIDC SSO），管理全部配置与运行时状态
 - **基础设施**：Postgres 持久化 + Redis 缓存 + Sandbox 代码沙箱 + T2I 文生图，未配置时自动返回未启用提示
@@ -5066,6 +5186,7 @@ git reset --hard <commit-hash>
 - **SQL 驱动知识库**：Web 存知识 → Agent 异步提取关键词 → 对话前 RAG 语义检索（首选）+ 关键词/模糊匹配降级，命中注入提示词
 - **群管理系统功能**：Go 原生（替代旧 Lua 插件），违禁言论 RAG 语义核实 + LLM 审核 + 学习闭环、图片刷屏/复读检测、三级惩罚、白名单/管理员豁免、`/groupstats` 等系统命令，Web 面板全参数可配
 - **Prometheus 监控**：`GET /metrics` 暴露事件流/Agent/LLM/群管理/RAG/插件/HTTP 等十组指标 + Go runtime，可配 Grafana 面板
+- **链路追踪（Grafana Tempo）**：每条事件一个 trace（OTel，根 span `process_event` + 群管理/插件/相关性/Agent/LLM/工具/RAG/审核闸门/发送子 span），Grafana Tempo 瀑布图查看单条事件处理全流程；环境变量驱动（`OTEL_EXPORTER_OTLP_ENDPOINT` 等），未配置时 no-op 零开销
 - **图床服务**：`data/imgs` 存储 + MIME/大小校验 + 虚拟文件夹；`imgs://<ID>` 引用由发送层自动转 base64（Plugin / Agent 无感）
 - **表情包库**：图床二次封装（名称/简介/标签）；短 UUID 对外，`stk://` 引用自动映射图床长 UUID（表情段 subType=1）；Agent 工具 + Plugin API 齐备
 - **摸鱼人日历**：独立每日定时任务，模板 → T2I 渲染 800×720 黑白纸张质感图片 → 富文本发送（不 @全体成员）；多群、按天群务、一言金句、农历/法定假日倒计时
@@ -6809,6 +6930,26 @@ function on_rag_response(req_id, ctx, result, err)
 end
 ```
 
+## 全局表: `metrics`
+
+权限：无需权限，默认注入。插件自定义 **Prometheus 指标**（暴露在主程序 `/metrics`，Grafana 可查）。
+指标名自动加前缀 `juanniang_plugin_<插件名>_`（插件名非法字符转 `_`，插件内只写短名）；
+同名幂等注册（返回已有句柄，计数跨插件重载延续）；短名仅允许字母/数字/下划线。
+
+| 函数 | 返回 | 说明 |
+|------|------|------|
+| `metrics.counter(name, help?) → handle, err` | 计数器 | `handle:inc()` +1；`handle:add(n)` +n（不能为负） |
+| `metrics.gauge(name, help?) → handle, err` | 仪表 | `handle:set(n)` 设置值；`handle:inc()` / `handle:add(n)` 增减 |
+| `metrics.histogram(name, help?) → handle, err` | 直方图 | `handle:observe(n)` 观测一个值（耗时/大小分布） |
+
+```lua
+-- 统计插件指标（Grafana 面板：juanniang_plugin_xxx_*）
+local msg_count = jn.metrics.counter("msg_count", "消息处理数")
+msg_count:inc()
+local latency = jn.metrics.histogram("handle_latency", "处理耗时")
+latency:observe(os.clock() - start)
+```
+
 ## 全局表: `agent`
 
 权限：`agent`。提供 Agent 配置查询与运行时管理（共 17 个函数）。
@@ -7187,6 +7328,7 @@ end
 | `sandbox` | `sandbox.*` |
 | `rag` | `rag.*` |
 | `agent` | `agent.*` |
+| (metrics 无需权限) | `metrics.*`（默认注入） |
 | (webhook 调用层过滤) | `on_webhook` 会被调用 |
 | (cronjob 调用层过滤) | `on_cronjob` 会被调用 |
 
@@ -8040,6 +8182,7 @@ make run
    - T2I：[astrbot-t2i-service](https://github.com/AstrBotDevs/astrbot-t2i-service) → `docker run -itd -p 8999:8999 soulter/astrbot-t2i-service:latest`
    - Sandbox：[shipyard-neo](https://github.com/AstrBotDevs/shipyard-neo)
    - RAG：[JuanNiang-RAG-Service](https://github.com/JuanNiangDev/JuanNiang-RAG-Service) → `make download && cargo run --release`（不部署也能跑，检索自动降级）
+   - 链路追踪（可选）：compose 内置 Tempo 服务，Grafana 添加 Tempo 数据源（`http://tempo:3200`）后在 Explore 查看单事件全流程瀑布图（详见[部署指南「链路追踪」](deployment.md#链路追踪grafana-tempo)）
    - 然后在 Web 面板对应页面填写服务地址并启用（详见[外部服务](development/external-services.md)）
 
 ## 验证部署

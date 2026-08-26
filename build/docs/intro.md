@@ -16,7 +16,7 @@
 - **四层记忆体系**：短期记忆（Redis 滑动窗口，默认 100 条，自动 Compact）/ 长期记忆（Postgres + RAG 语义召回，降级 pg_trgm 相似度匹配）/ 技能记忆（SkillMemory，Compact 时自动提取）/ 会话记录（Postgres 审计）
 - **RAG 语义检索**：对接独立 RAG-Service（bge 进程内推理），知识库检索、长期记忆召回、群管理违禁核实均以 RAG 语义匹配为**首选**，未配置/故障自动降级不阻塞主流程
 - **OneBot11 反向 WebSocket 适配器**：与 QQ 机器人框架对接，OneBot11 API 作为 Agent 工具注册
-- **Lua 插件系统**：gopher-lua 驱动，支持多级命令、Lua SDK（带 LuaCATS 注解）、插件目录文本文件读写（`jn.file`）、系统插件保护
+- **Lua 插件系统**：gopher-lua 驱动，支持多级命令、Lua SDK（带 LuaCATS 注解）、插件目录文本文件读写（`jn.file`）、系统插件保护；插件可自定义 Prometheus 指标（`jn.metrics`，自动 `juanniang_plugin_<插件名>_` 前缀）
 - **插件商店**：从 GitHub 仓库浏览/安装社区插件（统一 5 件套格式），国内镜像源手动选择 + 连通性测试，每晚自动更新元数据；插件动态配置（bool/string/list）由 Web 面板按 `config.yaml` 动态渲染
 - **Web 管理后台**：Vue 3 + Vuetify 3，JWT 鉴权（可选 OIDC SSO），管理全部配置与运行时状态
 - **基础设施**：Postgres 持久化 + Redis 缓存 + Sandbox 代码沙箱 + T2I 文生图，未配置时自动返回未启用提示
@@ -24,6 +24,7 @@
 - **SQL 驱动知识库**：Web 存知识 → Agent 异步提取关键词 → 对话前 RAG 语义检索（首选）+ 关键词/模糊匹配降级，命中注入提示词
 - **群管理系统功能**：Go 原生（替代旧 Lua 插件），违禁言论 RAG 语义核实 + LLM 审核 + 学习闭环、图片刷屏/复读检测、三级惩罚、白名单/管理员豁免、`/groupstats` 等系统命令，Web 面板全参数可配
 - **Prometheus 监控**：`GET /metrics` 暴露事件流/Agent/LLM/群管理/RAG/插件/HTTP 等十组指标 + Go runtime，可配 Grafana 面板
+- **链路追踪（Grafana Tempo）**：每条事件一个 trace（OTel，根 span `process_event` + 群管理/插件/相关性/Agent/LLM/工具/RAG/审核闸门/发送子 span），Grafana Tempo 瀑布图查看单条事件处理全流程；环境变量驱动（`OTEL_EXPORTER_OTLP_ENDPOINT` 等），未配置时 no-op 零开销
 - **图床服务**：`data/imgs` 存储 + MIME/大小校验 + 虚拟文件夹；`imgs://<ID>` 引用由发送层自动转 base64（Plugin / Agent 无感）
 - **表情包库**：图床二次封装（名称/简介/标签）；短 UUID 对外，`stk://` 引用自动映射图床长 UUID（表情段 subType=1）；Agent 工具 + Plugin API 齐备
 - **摸鱼人日历**：独立每日定时任务，模板 → T2I 渲染 800×720 黑白纸张质感图片 → 富文本发送（不 @全体成员）；多群、按天群务、一言金句、农历/法定假日倒计时
