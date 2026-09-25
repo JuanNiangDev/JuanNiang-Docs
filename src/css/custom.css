@@ -373,3 +373,139 @@
 .theme-doc-sidebar-container {
   border-right-color: var(--jn-hairline) !important;
 }
+
+/* ============ 文档正文：标题 / 表格 / 代码 ============
+   参考 intentui 文档排版：层级用字号与留白拉开而非加粗加大；
+   表格是「发丝框容器 + 行分隔线」，不是每格都画线；代码块与内联代码同一套发丝框语言。 */
+
+/* ---- 标题 ---- */
+
+/* 页面标题：48px/700 过大，收一档并收紧字距 */
+.theme-doc-markdown > header h1,
+.theme-doc-markdown h1 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* 章节标题：32px/700 过重，降到 1.4rem/600，靠上方留白与一条发丝线分层 */
+.theme-doc-markdown h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin: 3rem 0 1rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--jn-hairline);
+}
+
+.theme-doc-markdown h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 2.25rem 0 0.75rem;
+}
+
+.theme-doc-markdown h4 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 1.75rem 0 0.6rem;
+}
+
+/* ---- 表格 ---- */
+
+/* 容器化：发丝边框 + 圆角 + 横向可滚（宽表不再被裁掉） */
+.theme-doc-markdown table {
+  display: block;
+  /* fit-content：框贴表体，避免 display:block 下内部表格盒收缩、右侧留出空带；
+     max-width 兜住宽表，超出部分由 overflow-x 横向滚动 */
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 12px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+/* 表头：不铺底色、不加粗成黑体，改用小号 + 灰字 + 一条分隔线 */
+.theme-doc-markdown thead th {
+  padding: 0.65rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--jn-hairline);
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 单元格：只留行分隔线，去掉每格四边的线 */
+.theme-doc-markdown tbody td {
+  padding: 0.65rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--jn-hairline);
+  vertical-align: middle;
+}
+
+.theme-doc-markdown tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.theme-doc-markdown tbody tr:hover td {
+  background: var(--vp-c-default-soft);
+}
+
+/* ---- 代码 ---- */
+
+/* 内联代码：灰底 + 小圆角，去掉边框（原样式带 1px 边框偏重） */
+.theme-doc-markdown :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border: none;
+  border-radius: 5px;
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-900);
+  font-size: 0.85em;
+}
+
+/* 代码块：同一套发丝框容器（圆角走主题变量，直接用 border-radius 会被主题的
+   .theme-code-block 规则按加载顺序压回 6.4px） */
+.theme-code-block {
+  --ifm-code-border-radius: 12px;
+  margin: 1.5rem 0;
+  border: 1px solid var(--jn-hairline);
+  border-radius: var(--ifm-code-border-radius);
+  overflow: hidden;
+}
+
+.theme-code-block pre {
+  margin: 0;
+  padding: 1.1rem 1.2rem;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+/* 代码块标题栏（有 title 时）：等宽小字 + 发丝线 */
+.theme-code-block div[class*='codeBlockTitle'] {
+  padding: 0.5rem 1.1rem;
+  border-bottom: 1px solid var(--jn-hairline);
+  background: var(--ifm-color-emphasis-100);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* 复制按钮：与全站一致的发丝胶囊 */
+.theme-code-block button[class*='copyButton'] {
+  top: 0.6rem;
+  right: 0.6rem;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 8px;
+  background: var(--jn-surface);
+}
