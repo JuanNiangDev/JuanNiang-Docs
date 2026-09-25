@@ -8,7 +8,6 @@ import {registerIconify} from '../icons/register';
 import DepthCarousel from '../components/DepthCarousel';
 import FeatureVisual, {type FeatureVisualVariant} from '../components/FeatureVisual';
 import GithubInfo from '../components/GithubInfo';
-import {Marquee, MarqueeContent, MarqueeItem, MarqueeFade} from '../components/Marquee';
 import StickerPeel from '../components/StickerPeel';
 import TechLogo from '../components/TechLogo';
 
@@ -96,18 +95,28 @@ const features: Feature[] = [
   },
 ];
 
+type Tech = {
+  name: string;
+  /** 该组件在本项目中的职责 */
+  role: string;
+  /** 品牌色：图标按各自品牌着色，不做统一色 */
+  color: string;
+};
+
+type TechStyle = CSSProperties & Record<'--tech-color', string>;
+
 // 首页「技术栈」区块：卷娘核心开发栈
-const techStack = [
-  'Go',
-  'Eino SDK',
-  'OneBot11',
-  'LLM（OpenAI 兼容）',
-  'Vue 3',
-  'Vuetify 3',
-  'Lua（gopher-lua）',
-  'PostgreSQL',
-  'Redis',
-  'Docker Compose',
+const techStack: Tech[] = [
+  {name: 'Go', role: '主程序语言', color: '#00ADD8'},
+  {name: 'Eino SDK', role: 'Agent 编排', color: '#325AB4'},
+  {name: 'OneBot11', role: 'QQ 协议接入', color: '#12B7F5'},
+  {name: 'LLM（OpenAI 兼容）', role: '对话模型', color: '#10A37F'},
+  {name: 'Vue 3', role: '前端框架', color: '#42B883'},
+  {name: 'Vuetify 3', role: '组件库', color: '#1867C0'},
+  {name: 'Lua（gopher-lua）', role: '插件引擎', color: '#2C2E83'},
+  {name: 'PostgreSQL', role: '持久化', color: '#4169E1'},
+  {name: 'Redis', role: '缓存', color: '#DC382D'},
+  {name: 'Docker Compose', role: '一键部署', color: '#2496ED'},
 ];
 
 const chapters = [
@@ -232,25 +241,27 @@ export default function Home(): JSX.Element {
               </p>
               <figure className={styles.introFigure}>
                 <img src="/img/head.webp" alt="卷娘表情包" className={styles.introHead} loading="lazy" />
+                <figcaption className={styles.introCaption}>卷娘 · 红岩网校吉祥物</figcaption>
               </figure>
             </div>
-            <h3 className={styles.techTitle}>技术栈</h3>
-            <div className={styles.techMarquee}>
-              <Marquee>
-                <MarqueeContent speed={28} direction="left" pauseOnHover>
-                  {techStack.map((t) => (
-                    <MarqueeItem key={t}>
-                      <span className={styles.techLogoItem}>
-                        <TechLogo name={t} />
-                        <span>{t}</span>
-                      </span>
-                    </MarqueeItem>
-                  ))}
-                </MarqueeContent>
-                <MarqueeFade side="left" />
-                <MarqueeFade side="right" />
-              </Marquee>
-            </div>
+          </div>
+        </section>
+
+        {/* 技术栈 */}
+        <section className={styles.section}>
+          <div className="container">
+            <h2 className={styles.sectionTitle}>技术栈</h2>
+            <ul className={styles.techGrid}>
+              {techStack.map((t) => (
+                <li className={styles.techCell} style={{'--tech-color': t.color} as TechStyle} key={t.name}>
+                  <span className={styles.techCellIcon}>
+                    <TechLogo name={t.name} />
+                  </span>
+                  <span className={styles.techCellName}>{t.name}</span>
+                  <span className={styles.techCellRole}>{t.role}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 

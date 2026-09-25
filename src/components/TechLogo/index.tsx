@@ -3,7 +3,7 @@ import type {JSX} from 'react';
 
 /**
  * 技术栈标识（本地离线）：
- * 全部走本地 brands 集合（monochrome currentColor），颜色由 .techLogoItem 的 color 控制。
+ * 全部走本地 brands 集合（monochrome currentColor），颜色由外层 color 控制。
  */
 const BRAND_ICONS: Record<string, string> = {
   'Go': 'brands:go',

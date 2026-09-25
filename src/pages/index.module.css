@@ -502,96 +502,116 @@ html[data-theme='dark'] .heroMask {
   text-decoration: none;
 }
 
-/* 项目介绍 + 技术栈（Vite v8 极简：左对齐 + 发丝 tag） */
-/* 两栏：左文字右表情包（文字略靠右，表情包小巧，竖屏才放大） */
+/* 项目介绍 + 技术栈：左文右表情包 → 发丝网格（XiodUI Foundation 行语言） */
+/* 两栏：左文字右表情包（表情包装进发丝框，竖屏时移到文字上方） */
 .introRow {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
-  max-width: 880px;
-  margin: 0 auto 1.75rem;
+  gap: 2.5rem;
+  max-width: 940px;
+  margin: 0 auto 2.5rem;
 }
 
 .introText {
-  flex: 0 1 60ch;
-  max-width: 60ch;
+  flex: 0 1 62ch;
+  max-width: 62ch;
   margin: 0;
   text-align: left;
   font-size: 1.05rem;
-  line-height: 1.8;
+  line-height: 1.85;
   color: var(--ifm-color-emphasis-700);
 }
 
+/* 表情包：发丝框 + 圆角 + 图注，避免贴图直接落在页面上 */
 .introFigure {
   flex: none;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 0.6rem;
   margin: 0;
+  padding: 0.85rem 0.85rem 0.7rem;
+  border: 1px solid var(--feature-card-border);
+  border-radius: 16px;
+  background: var(--feature-card-bg);
 }
 
 .introHead {
-  width: 130px;
+  width: 132px;
   height: auto;
-  object-fit: contain;
   display: block;
-}
-@media (max-width: 996px) {
-  .heroTitle {
-    font-size: 2.2rem;
-  }
-
-  /* 竖屏：表情包在上、完整介绍在下，表情包可放大 */
-  .introRow {
-    flex-direction: column;
-    align-items: center;
-    gap: 1.25rem;
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  .introFigure {
-    order: -1;
-  }
-
-  .introHead {
-    width: 160px;
-    height: auto;
-  }
-
-  .introText {
-    flex: 1 1 auto;
-    max-width: none;
-  }
+  border-radius: 10px;
 }
 
-.techTitle {
-  text-align: left;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ifm-color-emphasis-700);
-}
-
-/* 技术栈 logo 跑马灯 */
-.techLogoItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: 3rem;
+.introCaption {
+  font-size: 0.72rem;
+  line-height: 1.3;
   color: var(--ifm-color-emphasis-600);
-  font-size: 0.95rem;
-  white-space: nowrap;
-  transition: color 0.15s ease;
 }
 
-.techLogoItem:hover {
-  color: var(--vp-c-brand-1);
+/* 技术栈网格：1px gap + 容器底色当发丝线，任意断点都不需要 nth-child 收边 */
+.techGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--feature-card-border);
+  border: 1px solid var(--feature-card-border);
+  border-radius: 16px;
+  overflow: hidden;
 }
 
-.techLogoItem svg,
-.techLogoItem img {
-  flex: none;
-  opacity: 0.9;
+.techCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem 1.2rem 1.25rem;
+  background: var(--ifm-background-color);
+  transition: background-color 0.15s ease;
 }
+
+.techCell:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* 图标默认统一灰阶，悬浮才点亮各自品牌色（--tech-color 由数据透传） */
+.techCellIcon {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  color: var(--ifm-color-emphasis-600);
+  transition: color 0.2s ease;
+}
+
+.techCell:hover .techCellIcon {
+  color: var(--tech-color, var(--ifm-color-emphasis-600));
+}
+
+.techCellName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ifm-color-emphasis-900);
+}
+
+.techCellRole {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--ifm-color-emphasis-600);
+}
+
+@media (max-width: 1200px) {
+  .techGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .techGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
