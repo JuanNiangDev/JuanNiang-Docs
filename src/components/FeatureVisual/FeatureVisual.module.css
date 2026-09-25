@@ -1,0 +1,520 @@
+/**
+ * 首页「核心特性」视觉层样式。
+ * 语言取自 efferd features-6/7/8：边缘渐隐遮罩、发丝边框、虚线插槽、
+ * 悬浮（.featureCard:hover）才播放的克制动效——类名用字面量 .fv-* 便于首页样式跨模块命中。
+ */
+
+/* 左右两端渐隐：让内容「出画」，而不是被硬裁 */
+.fadeX {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+}
+
+/* ---------- Agent 系统：模型瓦片 ---------- */
+
+.modelsViewport {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.models {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  width: max-content;
+  padding: 10px 0 2px;
+}
+
+.modelSlot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.modelTile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  border: 1px solid var(--feature-card-border);
+  background: var(--ifm-background-color);
+  color: var(--ifm-color-emphasis-600);
+  transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* 选中态：抬高 + 描边（对应 efferd 里被顶起的那一枚） */
+.modelSlotActive .modelTile {
+  border-color: var(--ifm-color-emphasis-400);
+  color: var(--ifm-color-primary);
+  box-shadow: 0 14px 26px -18px rgba(0, 0, 0, 0.45);
+}
+
+.modelLabel {
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--ifm-color-emphasis-600);
+  white-space: nowrap;
+}
+
+/* ---------- 异步并发：柱状图 ---------- */
+
+.barsViewport {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 22px;
+}
+
+.bars {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  display: block;
+  color: var(--ifm-font-color-base);
+}
+
+.bar {
+  fill: var(--ifm-color-emphasis-300);
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+
+.barHi {
+  fill: var(--ifm-font-color-base);
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+
+.barsTip {
+  position: absolute;
+  top: 0;
+  left: 48%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--feature-card-border);
+  background: var(--ifm-background-color);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--ifm-font-color-base);
+}
+
+.barsDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ifm-font-color-base);
+}
+
+/* ---------- 四层记忆：会话转录 ---------- */
+
+.memory {
+  width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  padding: 14px 16px 0;
+  border: 1px solid var(--feature-card-border);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  background: var(--ifm-background-color);
+  -webkit-mask-image: linear-gradient(to bottom, #000 42%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 42%, transparent 100%);
+}
+
+.memoryHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.memoryAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 8px;
+  border: 1px solid var(--feature-card-border);
+  color: var(--ifm-color-primary);
+}
+
+.memoryName {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.memoryTime {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ifm-color-emphasis-500);
+}
+
+.memoryText {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.memoryLine {
+  display: block;
+}
+
+/* 悬浮时才闪烁的输入光标 */
+.memoryCaret {
+  display: inline-block;
+  width: 6px;
+  height: 0.72rem;
+  margin-left: 3px;
+  vertical-align: -1px;
+  background: currentColor;
+  opacity: 0;
+}
+
+/* ---------- Lua 插件：虚线插槽 + 胶囊 ---------- */
+
+.pluginsViewport {
+  width: 100%;
+}
+
+.plugins {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  justify-content: center;
+  gap: 14px 18px;
+  width: max-content;
+  padding: 6px 10px;
+}
+
+.pluginSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px dashed var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+}
+
+/* 胶囊相对虚线框错位：efferd 里「贴纸压在插槽上」的观感 */
+.pluginSlot:nth-child(odd) {
+  transform: translate(10px, 5px);
+}
+
+.pluginSlot:nth-child(even) {
+  transform: translate(-10px, -5px);
+}
+
+.pluginChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--feature-card-border);
+  background: var(--ifm-background-color);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--ifm-color-emphasis-700);
+  box-shadow: 0 6px 14px -10px rgba(0, 0, 0, 0.4);
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.pluginChip :global(svg) {
+  color: var(--ifm-color-emphasis-500);
+  transition: color 0.25s ease;
+}
+
+/* ---------- Web 管理后台：窗口截图出血 ---------- */
+
+.adminViewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 150px;
+  overflow: hidden;
+}
+
+.adminWindow {
+  position: absolute;
+  right: -6%;
+  bottom: -6%;
+  width: 104%;
+  margin: 0;
+  border: 1px solid var(--feature-card-border);
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  background: var(--ifm-background-color);
+  transform: translateY(14px);
+  opacity: 0.92;
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.55s ease;
+  -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+}
+
+
+.adminBar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 18px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--feature-card-border);
+}
+
+.adminBar i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ifm-color-emphasis-300);
+}
+
+.adminWindow img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: left top;
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* 悬浮推近：比「高光扫过」更克制，也更有信息量（示意界面还有下文） */
+:global(.fv-card):hover .adminWindow img {
+  transform: scale(1.035);
+}
+
+:global(html[data-theme='dark']) .adminWindow img {
+  filter: brightness(0.86) saturate(0.96);
+}
+
+/* ---------- 开箱即用模块：虚线方格图标阵 ---------- */
+
+.modulesViewport {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.modules {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  padding: 4px 2px;
+}
+
+.moduleTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border: 1px dashed var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  color: var(--ifm-color-emphasis-600);
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.moduleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  transition: color 0.25s ease;
+}
+
+.moduleLabel {
+  font-size: 0.68rem;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ============ 悬浮动效 ============
+   .fv-card 由首页加在特性卡片上，动效只在卡片被 hover 时播放（与柱状图一致），
+   移开鼠标即回到静态帧，不在闲置时持续占用合成层。 */
+
+:global(.fv-card):hover .memoryLine {
+  animation: fvLineIn 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+:global(.fv-card):hover .memoryCaret {
+  animation: fvCaret 1.05s steps(1, end) infinite;
+}
+
+:global(.fv-card):hover .pluginChip {
+  animation: fvChipIn 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+:global(.fv-card):hover .moduleTile {
+  animation: fvTileIn 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+:global(.fv-card):hover :global(.fv-bar) {
+  animation: fvBarRise 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* 后台窗口上浮 + 截图推近（transition，进出都可逆） */
+:global(.fv-card):hover .adminWindow {
+  transform: none;
+  opacity: 1;
+}
+
+/* 品牌色：悬浮才点亮。智谱与 Kimi 本身是黑色商标，深色下改用白色以保持可见 */
+:global(.fv-card):hover :global(.fv-openai) {
+  color: #10a37f;
+}
+
+:global(.fv-card):hover :global(.fv-anthropic) {
+  color: #d97757;
+}
+
+:global(.fv-card):hover :global(.fv-gemini) {
+  color: #4285f4;
+}
+
+:global(.fv-card):hover :global(.fv-deepseek) {
+  color: #4d6bfe;
+}
+
+:global(.fv-card):hover :global(.fv-qwen) {
+  color: #6d28d9;
+}
+
+:global(.fv-card):hover :global(.fv-minimax) {
+  color: #ef4444;
+}
+
+:global(.fv-card):hover :global(.fv-glm),
+:global(.fv-card):hover :global(.fv-kimi) {
+  color: #18181b;
+}
+
+:global(html[data-theme='dark']) :global(.fv-card):hover :global(.fv-glm),
+:global(html[data-theme='dark']) :global(.fv-card):hover :global(.fv-kimi) {
+  color: #ffffff;
+}
+
+:global(.fv-card):hover :global(.fv-postgres) {
+  color: #4169e1;
+}
+
+:global(.fv-card):hover :global(.fv-redis) {
+  color: #dc382d;
+}
+
+@keyframes fvLineIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fvCaret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fvChipIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fvTileIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fvBarRise {
+  from {
+    transform: scaleY(0.12);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* 尊重系统「减弱动态效果」：位移类动效退化为纯淡入，光标停止闪烁，截图不再推近 */
+@media (prefers-reduced-motion: reduce) {
+  :global(.fv-card):hover .memoryLine,
+  :global(.fv-card):hover .pluginChip,
+  :global(.fv-card):hover .moduleTile {
+    animation-name: fvFadeIn;
+    animation-duration: 150ms;
+    animation-delay: 0s;
+  }
+
+  :global(.fv-card):hover .memoryCaret {
+    animation: none;
+    opacity: 1;
+  }
+
+  :global(.fv-card):hover :global(.fv-bar) {
+    animation: none;
+  }
+
+  .adminWindow {
+    transform: none;
+    transition: opacity 150ms ease;
+  }
+
+  :global(.fv-card):hover .adminWindow img {
+    transform: none;
+  }
+}
+
+@keyframes fvFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
