@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import type {JSX} from 'react';
 import {Icon} from '@iconify/react/offline';
 import {registerIconify} from '../../icons/register';
 import styles from './styles.module.css';
@@ -83,15 +84,22 @@ export default function GithubInfo({owner, repo, token, baseUrl = 'https://api.g
   }, [owner, repo, token, baseUrl]);
 
   return (
-    <a className={styles.card} href={href} target="_blank" rel="noopener noreferrer" aria-busy={stars == null ? 'true' : 'false'}>
+    <a
+      className={styles.card}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-busy={stars == null ? 'true' : 'false'}>
       <div className={styles.inner}>
         <span className={styles.avatar} aria-hidden="true">
-          <Icon icon="mdi:github" width={36} height={36} />
+          <Icon icon="mdi:github" width={30} height={30} />
         </span>
         <div className={styles.content}>
           <p className={styles.title}>
-            <span className={styles.owner}>{ownerName}</span>
-            <span className={styles.slash} aria-hidden="true">/</span>
+            <span className={styles.slug}>
+              <span className={styles.owner}>{ownerName}</span>
+              <span className={styles.slash} aria-hidden="true">/</span>
+            </span>
             <span className={styles.repo}>{repoName}</span>
           </p>
           {description ? <p className={styles.desc}>{description}</p> : null}
