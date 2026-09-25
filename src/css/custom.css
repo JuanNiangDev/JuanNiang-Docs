@@ -34,10 +34,19 @@
   --vp-c-brand-2: var(--ifm-color-primary-lighter);
   --vp-c-default-soft: color-mix(in oklab, var(--ifm-color-primary) 8%, transparent);
 
+  /* 全站发丝线：卡片 / 导航 / 页脚共用同一色 */
+  --jn-hairline: var(--ifm-color-emphasis-200);
+
+  /* 不透明页面底色：亮色下 --ifm-background-color 为 transparent，浮层必须用这个 */
+  --jn-surface: var(--ifm-background-surface-color);
+
   /* 核心特性卡表面：亮色为浅卡，暗色为深卡（深浅自适应） */
   --feature-card-bg: var(--ifm-color-emphasis-100);
-  --feature-card-border: var(--ifm-color-emphasis-200);
+  --feature-card-border: var(--jn-hairline);
   --feature-visual-bg: var(--ifm-color-emphasis-200);
+
+  /* 页脚底色：品牌带与 Docusaurus footer--dark 共用，保证连成一整块 */
+  --jn-footer-bg: #303846;
 
   /* 特性/章节图标色：低饱和，chroma ≈ 0.15，参考品牌蓝 #0b85d7（oklch 0.60 0.156 247）饱和度 */
   --icon-indigo:  oklch(0.585 0.15 277);
@@ -65,8 +74,10 @@
   --docusaurus-highlighted-code-line-bg: rgba(11, 133, 215, 0.25);
 
   /* 暗色下核心特性卡用深色表面（呼应 Vite v5 暗卡） */
+  --jn-hairline: #26262b;
+  --jn-surface: var(--ifm-background-color);
   --feature-card-bg: #141416;
-  --feature-card-border: #26262b;
+  --feature-card-border: var(--jn-hairline);
   --feature-visual-bg: #1d1d22;
 }
 
@@ -111,4 +122,169 @@
 .markdown li a {
   display: inline-block;
   padding: 0 1px;
+}
+
+/* ============ 顶部导航 ============
+   参考 shadcnspace「Navbar 11 · Boxed」：整条导航是一个发丝边框的盒子，
+   品牌 / 链接 / 操作三区由竖发丝线切开；下拉为「Navbar 12」式的多列 mega menu。 */
+
+/* 导航条本体：不铺底色（页面上只留圆角盒子），滚动后才补底色与分隔线 */
+.navbar {
+  background: transparent;
+  box-shadow: none;
+  padding: 0.65rem 1rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* .navbar--scrolled 由 /js/navbar.js 在滚动后挂上；提高特异性以免与 .navbar 同权重时被顺序左右 */
+.navbar.navbar--scrolled {
+  background: var(--jn-surface);
+  border-bottom: 1px solid var(--jn-hairline);
+}
+
+/* 内容盒 */
+.navbar__inner {
+  max-width: var(--ifm-container-width-xl);
+  margin: 0 auto;
+  min-height: 52px;
+  padding: 0 0.25rem;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 14px;
+  background: var(--jn-surface);
+}
+
+/* 分区竖线：品牌右侧、操作区左侧（拉伸至盒子高度，线才贯通） */
+.navbar__brand {
+  align-self: stretch;
+  align-items: center;
+  margin-right: 0.5rem;
+  padding-right: 1rem;
+  border-right: 1px solid var(--jn-hairline);
+}
+
+.navbar__items--right {
+  align-self: stretch;
+  align-items: center;
+  padding-left: 1rem;
+  border-left: 1px solid var(--jn-hairline);
+}
+
+/* 项间距统一：容器统一 gap，并清掉下拉包装层自带的 12px 内边距
+   （它是「项与项之间间距不等」的根因：普通项 20.8px、含下拉项 44.8px） */
+.navbar__items {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar__item.dropdown {
+  padding: 0;
+}
+
+.navbar__title {
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+/* 链接：胶囊命中区 + 悬浮底色 */
+.navbar__link {
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ifm-color-emphasis-800);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.navbar__link:hover {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-default-soft);
+}
+
+/* 当前页 / 当前分组：与 hover 同一套胶囊（不用下划线，两种状态视觉一致）。
+   上级分组用 :has() 判定——组内含激活项即点亮，纯 CSS、不受 React 重渲染影响 */
+.navbar__link--active,
+.navbar__item.dropdown:has(.dropdown__link--active) > .navbar__link {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-default-soft);
+}
+
+/* 主操作（GitHub）：实心胶囊，深浅色自适应 */
+.navbar__link.navbar-cta {
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  background: var(--ifm-color-emphasis-900);
+  color: var(--jn-surface);
+  font-weight: 600;
+}
+
+.navbar__link.navbar-cta:hover {
+  background: var(--vp-c-brand-1);
+  color: #fff;
+}
+
+/* 搜索框：与盒子同一套描边 */
+.navbar__search-input {
+  border-radius: 999px;
+  border: 1px solid var(--jn-hairline);
+  background: var(--jn-surface);
+  font-size: 0.85rem;
+}
+
+/* 多列 mega menu：两列 + 中缝竖发丝线（条目取文档标题，不另起叫法） */
+.navbar__item.dropdown .dropdown__menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 26rem;
+  padding: 0.4rem;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 14px;
+  overflow: visible;
+  max-height: none;
+  background-color: var(--jn-surface);
+  background-image: linear-gradient(var(--jn-hairline), var(--jn-hairline));
+  background-size: 1px 100%;
+  background-position: 50% 0;
+  background-repeat: no-repeat;
+  box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.5);
+}
+
+.dropdown__link {
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.dropdown__link:hover,
+.dropdown__link--active {
+  background: var(--vp-c-default-soft);
+  color: var(--vp-c-brand-1);
+}
+
+/* 窄屏：mega menu 收成单列（此时下拉已在汉堡菜单内，不再需要中缝线） */
+@media (max-width: 996px) {
+  .navbar__inner {
+    min-height: 46px;
+    padding: 0;
+  }
+
+  .navbar__brand {
+    padding-right: 0.75rem;
+    margin-right: 0.25rem;
+  }
+
+  .navbar__items--right {
+    padding-left: 0.5rem;
+  }
+
+  .navbar__item.dropdown .dropdown__menu {
+    display: block;
+    min-width: 0;
+    padding: 0.25rem;
+    border: none;
+    border-radius: 0;
+    background-image: none;
+    box-shadow: none;
+  }
 }

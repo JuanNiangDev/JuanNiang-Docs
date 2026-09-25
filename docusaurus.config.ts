@@ -48,6 +48,13 @@ const config: Config = {
         defer: true,
       },
     },
+    {
+      tagName: 'script',
+      attributes: {
+        src: '/js/navbar.js',
+        defer: true,
+      },
+    },
 
     // ===== Umami 访问统计（analytics.hxcn.dev）=====
     // 自托管 Umami，无第三方 Cookie；data-website-id 对应本站统计站点。
@@ -197,16 +204,61 @@ const config: Config = {
         alt: 'JuanNiang-Neo',
         src: 'img/avatar.webp',
       },
+      // 统一用 to（而不是 type: 'doc'）：doc 类型项的激活判定是「与当前文档同属一个 sidebar」，
+      // 本站所有文档同属一个 sidebar，会导致所有项同时点亮；to 走 react-router 的精确匹配
       items: [
-        {type: 'doc', docId: 'quickstart', label: '快速开始', position: 'left'},
-        {type: 'doc', docId: 'deployment', label: '部署', position: 'left'},
-        {type: 'doc', docId: 'development/setup', label: '二次开发', position: 'left'},
-        {type: 'doc', docId: 'plugins/quickstart', label: '插件', position: 'left'},
-        {type: 'doc', docId: 'development/api/intro', label: 'Web API', position: 'left'},
+        {to: '/docs/quickstart', label: '快速开始', position: 'left'},
+        {to: '/docs/deployment', label: '部署', position: 'left'},
+        // 多列 mega menu：label 取文档标题的导航精简写法（去掉括号补充与重复前缀）
+        {
+          type: 'dropdown',
+          label: '二次开发',
+          position: 'left',
+          items: [
+            {to: '/docs/development/setup', label: '本地开发环境'},
+            // 该文档真实路径是 /docs/development（文件名与目录同名时 Docusaurus 会省略重复段），
+            // 且它是其它条目的前缀，用 activeBaseRegex 收紧成精确匹配，避免在子页面上同时点亮两项
+            {
+              to: '/docs/development',
+              label: '项目开发文档',
+              activeBaseRegex: '^/docs/development/?$',
+            },
+            {to: '/docs/development/architecture', label: '架构与设计'},
+            {to: '/docs/development/external-services', label: '外部服务接入细节'},
+            {to: '/docs/development/webhook-cronjob', label: 'Webhook 与 CronJob'},
+            {to: '/docs/development/llm-provider', label: 'LLM Provider 适配'},
+          ],
+        },
+        {
+          type: 'dropdown',
+          label: 'Web API',
+          position: 'left',
+          items: [
+            {to: '/docs/development/api/intro', label: '接口约定与系统状态'},
+            {to: '/docs/development/api/agent', label: 'Agent 配置'},
+            {to: '/docs/development/api/features', label: '功能模块'},
+            {to: '/docs/development/api/infra', label: '适配器与会话'},
+          ],
+        },
+        {
+          type: 'dropdown',
+          label: '插件',
+          position: 'left',
+          items: [
+            {to: '/docs/plugins/quickstart', label: '插件开发指南'},
+            {to: '/docs/plugins/api-reference', label: 'Lua API 参考'},
+            {to: '/docs/plugins/engine', label: '插件引擎实现'},
+            {to: '/docs/plugins/pitfalls', label: '插件开发常见坑'},
+            {to: '/docs/plugins/store', label: '插件商店'},
+            {to: '/docs/plugins/repo', label: '官方插件仓库'},
+            {to: '/docs/plugins/examples', label: '示例插件'},
+          ],
+        },
         {
           href: repoUrl,
           label: 'GitHub',
           position: 'right',
+          className: 'navbar-cta',
         },
         {
           href: pluginsRepoUrl,
