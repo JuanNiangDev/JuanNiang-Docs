@@ -1,0 +1,306 @@
+/**
+ * 站点页脚（整体替换原版 Footer）。
+ * 版式：通栏品牌行 → 两列（左文档导航 / 右仓库）→ 条纹分隔条 → 三段底栏。
+ * :global(.footer).footer 用于压过主题 .footer 的外壳（padding / 底色）。
+ */
+
+:global(.footer).footer {
+  background: var(--jn-footer-bg);
+  color: rgba(235, 237, 240, 0.72);
+  padding: 3.25rem 0 1.75rem;
+  font-size: 0.85rem;
+}
+
+/* ---------- 左列：上品牌、下文档导航 ---------- */
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.9rem;
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.masthead {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.tagline {
+  margin: 0;
+  line-height: 1.6;
+  color: rgba(235, 237, 240, 0.6);
+}
+
+.avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(235, 237, 240, 0.16);
+}
+
+.wordmark {
+  font-family: 'PoetsenOne', var(--ifm-font-family-base);
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+/* ---------- 两列：左（品牌 + 文档导航）/ 右（仓库） ---------- */
+
+.middle {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+  gap: 3rem;
+}
+
+/* 文档导航：4 个分栏 */
+.cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem 1.5rem;
+  min-width: 0;
+}
+
+.col {
+  min-width: 0;
+}
+
+/* 分栏标题：小号 + 字距 + 顶部发丝线（两列共用同一套） */
+.colTitle {
+  margin: 0 0 0.9rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(235, 237, 240, 0.16);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(235, 237, 240, 0.55);
+}
+
+.colItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.colLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: rgba(235, 237, 240, 0.72);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.colLink:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.external {
+  flex: none;
+  transform: rotate(-45deg);
+  opacity: 0.6;
+}
+
+/* 仓库列 */
+.repoCol {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 仓库列标题不带分隔线，也不留 padding：与左侧品牌的报头同一行高 */
+.repoCol .colTitle {
+  border-top: none;
+  padding-top: 0;
+}
+
+.repos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* 仓库行：发丝框行（Footer 51 的 boxed 行） */
+.repoRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid rgba(235, 237, 240, 0.16);
+  border-radius: 10px;
+  color: rgba(235, 237, 240, 0.82);
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.repoRow:hover {
+  color: #fff;
+  border-color: rgba(235, 237, 240, 0.42);
+  background: rgba(235, 237, 240, 0.05);
+  text-decoration: none;
+}
+
+.repoName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repoRole {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: rgba(235, 237, 240, 0.5);
+  white-space: nowrap;
+}
+
+/* 主入口按钮：整列宽的发丝按钮 */
+.repoButton {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid rgba(235, 237, 240, 0.24);
+  border-radius: 10px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.repoButton:hover {
+  border-color: rgba(235, 237, 240, 0.5);
+  background: rgba(235, 237, 240, 0.06);
+  color: #fff;
+  text-decoration: none;
+}
+
+.repoArrow {
+  flex: none;
+  transform: rotate(-45deg);
+  opacity: 0.55;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.repoRow:hover .repoArrow,
+.repoButton:hover .repoArrow {
+  transform: rotate(0deg);
+  opacity: 1;
+}
+
+/* ---------- 分隔：条纹条（Footer 51 的 pattern bar） ---------- */
+
+.pattern {
+  height: 6px;
+  margin: 2.75rem 0 1.5rem;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(235, 237, 240, 0.22) 0 1px,
+    transparent 1px 7px
+  );
+  opacity: 0.7;
+}
+
+/* ---------- 底栏：三段，段间竖发丝线 ---------- */
+
+.bottom {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(235, 237, 240, 0.5);
+}
+
+.bottom > :global(span) {
+  padding: 0 1.25rem;
+}
+
+.bottom > :global(span):first-child {
+  padding-left: 0;
+}
+
+.bottom > :global(span + span) {
+  border-left: 1px solid rgba(235, 237, 240, 0.16);
+}
+
+.bottom > :global(span):last-child {
+  padding-right: 0;
+}
+
+.bottom :global(a) {
+  color: rgba(235, 237, 240, 0.72);
+}
+
+.bottom :global(a:hover) {
+  color: #fff;
+}
+
+/* 底栏 GitHub 图标链接（config 里的内联 SVG） */
+.bottom :global(.footer-icon-link) {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+}
+
+@media (max-width: 1100px) {
+  .middle {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1.25rem;
+  }
+}
+
+@media (max-width: 996px) {
+  :global(.footer).footer {
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  .left {
+    gap: 1.6rem;
+  }
+
+  .pattern {
+    margin-top: 2.25rem;
+  }
+
+  .bottom {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .bottom > :global(span),
+  .bottom > :global(span):first-child {
+    padding: 0;
+  }
+
+  .bottom > :global(span + span) {
+    border-left: none;
+  }
+
+  .bottom :global(.footer-icon-link) {
+    margin-left: 0;
+  }
+}
