@@ -1,12 +1,36 @@
+/* 仓库信息卡：圆角外壳 + 圆形头像环 + 悬浮径向光（与首页 bento 同一套语言） */
 .card {
+  position: relative;
   display: flex;
   height: 100%;
   border: 1px solid var(--feature-card-border);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--feature-card-bg);
   color: var(--ifm-color-emphasis-800);
   text-decoration: none !important;
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* 悬浮：不铺彩色光雾，只用结构线——右下角 1px 十字准星 + 头像外环转品牌色虚线环 */
+.card::before {
+  content: '';
+  position: absolute;
+  right: 13px;
+  bottom: 13px;
+  width: 9px;
+  height: 9px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background:
+    linear-gradient(var(--ifm-color-emphasis-400), var(--ifm-color-emphasis-400)) center / 9px 1px
+      no-repeat,
+    linear-gradient(var(--ifm-color-emphasis-400), var(--ifm-color-emphasis-400)) center / 1px 9px
+      no-repeat;
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 .card:hover {
@@ -15,45 +39,64 @@
   background: var(--vp-c-default-soft);
 }
 
+.card:hover .avatar {
+  outline-style: dashed;
+  outline-color: var(--vp-c-brand-1);
+}
+
 .inner {
   flex: 1;
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
   padding: 18px 20px;
 }
 
+/* 圆形 + 外扩发丝描边（efferd 的 outline-offset 语言） */
 .avatar {
   flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 10px;
-  background: var(--feature-visual-bg);
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--feature-card-border);
+  background: var(--ifm-background-color);
   color: var(--ifm-color-primary);
+  outline: 1px solid var(--feature-card-border);
+  outline-offset: 3px;
+  transition: outline-color 0.2s ease;
 }
 
 .content {
-  min-width: 0;
   flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+/* 自适应换行：先在 owner/ 与 repo 之间断，极窄时再断 repo 名，任何宽度都不溢出卡片 */
 .title {
   display: flex;
-  align-items: center;
-  gap: 3px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 3px;
   margin: 0;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
-  /* 长仓库名含连字符会在 - 处断行，强制单行，配合缩小字号避免 1080p 下换行 */
-  white-space: nowrap;
   color: var(--ifm-color-emphasis-1000);
+  overflow-wrap: anywhere;
+}
+
+/* owner + 斜杠作为一个不可断的整体 */
+.slug {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
 }
 
 .owner {
@@ -75,18 +118,19 @@
   font-size: 14px;
   line-height: 1.45;
   color: var(--ifm-color-emphasis-600);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
+/* 统计行：虚线分隔（与文档导航卡的分隔线同一处理） */
 .meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin: 0;
-  font-size: 14px;
+  margin: 6px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--ifm-color-emphasis-300);
+  font-size: 13px;
   line-height: 1.4;
   color: var(--ifm-color-emphasis-600);
 }

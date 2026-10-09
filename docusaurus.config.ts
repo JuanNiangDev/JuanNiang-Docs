@@ -48,6 +48,13 @@ const config: Config = {
         defer: true,
       },
     },
+    {
+      tagName: 'script',
+      attributes: {
+        src: '/js/navbar.js',
+        defer: true,
+      },
+    },
 
     // ===== Umami 访问统计（analytics.hxcn.dev）=====
     // 自托管 Umami，无第三方 Cookie；data-website-id 对应本站统计站点。
@@ -197,16 +204,61 @@ const config: Config = {
         alt: 'JuanNiang-Neo',
         src: 'img/avatar.webp',
       },
+      // 统一用 to（而不是 type: 'doc'）：doc 类型项的激活判定是「与当前文档同属一个 sidebar」，
+      // 本站所有文档同属一个 sidebar，会导致所有项同时点亮；to 走 react-router 的精确匹配
       items: [
-        {type: 'doc', docId: 'quickstart', label: '快速开始', position: 'left'},
-        {type: 'doc', docId: 'deployment', label: '部署', position: 'left'},
-        {type: 'doc', docId: 'development/setup', label: '二次开发', position: 'left'},
-        {type: 'doc', docId: 'plugins/quickstart', label: '插件', position: 'left'},
-        {type: 'doc', docId: 'development/api/intro', label: 'Web API', position: 'left'},
+        {to: '/docs/quickstart', label: '快速开始', position: 'left'},
+        {to: '/docs/deployment', label: '部署', position: 'left'},
+        // 多列 mega menu：label 取文档标题的导航精简写法（去掉括号补充与重复前缀）
+        {
+          type: 'dropdown',
+          label: '二次开发',
+          position: 'left',
+          items: [
+            {to: '/docs/development/setup', label: '本地开发环境'},
+            // 该文档真实路径是 /docs/development（文件名与目录同名时 Docusaurus 会省略重复段），
+            // 且它是其它条目的前缀，用 activeBaseRegex 收紧成精确匹配，避免在子页面上同时点亮两项
+            {
+              to: '/docs/development',
+              label: '项目开发文档',
+              activeBaseRegex: '^/docs/development/?$',
+            },
+            {to: '/docs/development/architecture', label: '架构与设计'},
+            {to: '/docs/development/external-services', label: '外部服务接入细节'},
+            {to: '/docs/development/webhook-cronjob', label: 'Webhook 与 CronJob'},
+            {to: '/docs/development/llm-provider', label: 'LLM Provider 适配'},
+          ],
+        },
+        {
+          type: 'dropdown',
+          label: 'Web API',
+          position: 'left',
+          items: [
+            {to: '/docs/development/api/intro', label: '接口约定与系统状态'},
+            {to: '/docs/development/api/agent', label: 'Agent 配置'},
+            {to: '/docs/development/api/features', label: '功能模块'},
+            {to: '/docs/development/api/infra', label: '适配器与会话'},
+          ],
+        },
+        {
+          type: 'dropdown',
+          label: '插件',
+          position: 'left',
+          items: [
+            {to: '/docs/plugins/quickstart', label: '插件开发指南'},
+            {to: '/docs/plugins/api-reference', label: 'Lua API 参考'},
+            {to: '/docs/plugins/engine', label: '插件引擎实现'},
+            {to: '/docs/plugins/pitfalls', label: '插件开发常见坑'},
+            {to: '/docs/plugins/store', label: '插件商店'},
+            {to: '/docs/plugins/repo', label: '官方插件仓库'},
+            {to: '/docs/plugins/examples', label: '示例插件'},
+          ],
+        },
         {
           href: repoUrl,
           label: 'GitHub',
           position: 'right',
+          className: 'navbar-cta',
         },
         {
           href: pluginsRepoUrl,
@@ -249,15 +301,9 @@ const config: Config = {
             {label: '示例插件', to: '/docs/plugins/examples'},
           ],
         },
-        {
-          title: '仓库',
-          items: [
-            {label: 'JuanNiang-Neo', href: repoUrl},
-            {label: 'JuanNiang-Plugins', href: pluginsRepoUrl},
-          ],
-        },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} <a href="https://redrock.team/" target="_blank" rel="noopener noreferrer">红岩网校工作站</a> · JuanNiang-Neo. 由 Docusaurus 强力驱动`,
+      // 底栏三段；第三段带 GitHub 图标链接（内联 SVG，config 里没有 React 组件）
+      copyright: `<span>Copyright © ${new Date().getFullYear()} JuanNiang-Neo</span><span>由 <a href="https://redrock.team/" target="_blank" rel="noopener noreferrer">红岩网校工作站</a> 开发</span><span>由 Docusaurus 强力驱动<a class="footer-icon-link" href="${repoUrl}" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库"><svg class="footer-icon-link-svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z"/></svg></a></span>`,
     },
     prism: {
       theme: prismThemes.github,

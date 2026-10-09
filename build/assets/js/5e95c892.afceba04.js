@@ -1,1 +1,0 @@
-"use strict";(globalThis.webpackChunkjuan_niang_docs||=[]).push([[9647],{6523(e,s,r){r.r(s),r.d(s,{default:()=>i}),r(1763);var a=r(3526),n=r(8720),u=r(1955),c=r(6345),t=r(1540),d=r(1987);function i(e){return(0,d.jsx)(u.e3,{className:(0,a.A)(n.G.wrapper.docsPages),children:(0,d.jsx)(t.A,{children:(0,c.v)(e.route.routes)})})}}}]);

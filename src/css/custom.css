@@ -34,10 +34,19 @@
   --vp-c-brand-2: var(--ifm-color-primary-lighter);
   --vp-c-default-soft: color-mix(in oklab, var(--ifm-color-primary) 8%, transparent);
 
+  /* 全站发丝线：卡片 / 导航 / 页脚共用同一色 */
+  --jn-hairline: var(--ifm-color-emphasis-200);
+
+  /* 不透明页面底色：亮色下 --ifm-background-color 为 transparent，浮层必须用这个 */
+  --jn-surface: var(--ifm-background-surface-color);
+
   /* 核心特性卡表面：亮色为浅卡，暗色为深卡（深浅自适应） */
   --feature-card-bg: var(--ifm-color-emphasis-100);
-  --feature-card-border: var(--ifm-color-emphasis-200);
+  --feature-card-border: var(--jn-hairline);
   --feature-visual-bg: var(--ifm-color-emphasis-200);
+
+  /* 页脚底色：品牌带与 Docusaurus footer--dark 共用，保证连成一整块 */
+  --jn-footer-bg: #303846;
 
   /* 特性/章节图标色：低饱和，chroma ≈ 0.15，参考品牌蓝 #0b85d7（oklch 0.60 0.156 247）饱和度 */
   --icon-indigo:  oklch(0.585 0.15 277);
@@ -65,8 +74,10 @@
   --docusaurus-highlighted-code-line-bg: rgba(11, 133, 215, 0.25);
 
   /* 暗色下核心特性卡用深色表面（呼应 Vite v5 暗卡） */
+  --jn-hairline: #26262b;
+  --jn-surface: var(--ifm-background-color);
   --feature-card-bg: #141416;
-  --feature-card-border: #26262b;
+  --feature-card-border: var(--jn-hairline);
   --feature-visual-bg: #1d1d22;
 }
 
@@ -111,4 +122,390 @@
 .markdown li a {
   display: inline-block;
   padding: 0 1px;
+}
+
+/* ============ 顶部导航 ============
+   参考 shadcnspace「Navbar 11 · Boxed」：整条导航是一个发丝边框的盒子，
+   品牌 / 链接 / 操作三区由竖发丝线切开；下拉为「Navbar 12」式的多列 mega menu。 */
+
+/* 导航条本体：不铺底色（页面上只留圆角盒子），滚动后才补底色与分隔线 */
+.navbar {
+  background: transparent;
+  box-shadow: none;
+  padding: 0.65rem 1rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* .navbar--scrolled 由 /js/navbar.js 在滚动后挂上；提高特异性以免与 .navbar 同权重时被顺序左右 */
+.navbar.navbar--scrolled {
+  background: var(--jn-surface);
+  border-bottom: 1px solid var(--jn-hairline);
+}
+
+/* 内容盒 */
+.navbar__inner {
+  max-width: var(--ifm-container-width-xl);
+  margin: 0 auto;
+  min-height: 52px;
+  padding: 0 0.25rem;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 14px;
+  background: var(--jn-surface);
+}
+
+/* 分区竖线：品牌右侧、操作区左侧（拉伸至盒子高度，线才贯通） */
+.navbar__brand {
+  align-self: stretch;
+  align-items: center;
+  margin-right: 0.5rem;
+  padding-right: 1rem;
+  border-right: 1px solid var(--jn-hairline);
+}
+
+.navbar__items--right {
+  align-self: stretch;
+  align-items: center;
+  padding-left: 1rem;
+  border-left: 1px solid var(--jn-hairline);
+}
+
+/* 项间距统一：容器统一 gap，并清掉下拉包装层自带的 12px 内边距
+   （它是「项与项之间间距不等」的根因：普通项 20.8px、含下拉项 44.8px） */
+.navbar__items {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar__item.dropdown {
+  padding: 0;
+}
+
+.navbar__title {
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+/* 链接：胶囊命中区 + 悬浮底色 */
+.navbar__link {
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ifm-color-emphasis-800);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.navbar__link:hover {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-default-soft);
+}
+
+/* 当前页 / 当前分组：与 hover 同一套胶囊（不用下划线，两种状态视觉一致）。
+   上级分组用 :has() 判定——组内含激活项即点亮，纯 CSS、不受 React 重渲染影响 */
+.navbar__link--active,
+.navbar__item.dropdown:has(.dropdown__link--active) > .navbar__link {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-default-soft);
+}
+
+/* 主操作（GitHub）：实心胶囊，深浅色自适应 */
+.navbar__link.navbar-cta {
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  background: var(--ifm-color-emphasis-900);
+  color: var(--jn-surface);
+  font-weight: 600;
+}
+
+.navbar__link.navbar-cta:hover {
+  background: var(--vp-c-brand-1);
+  color: #fff;
+}
+
+/* 搜索框：与盒子同一套描边 */
+.navbar__search-input {
+  border-radius: 999px;
+  border: 1px solid var(--jn-hairline);
+  background: var(--jn-surface);
+  font-size: 0.85rem;
+}
+
+/* 多列 mega menu：两列 + 中缝竖发丝线（条目取文档标题，不另起叫法） */
+.navbar__item.dropdown .dropdown__menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 26rem;
+  padding: 0.4rem;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 14px;
+  overflow: visible;
+  max-height: none;
+  background-color: var(--jn-surface);
+  background-image: linear-gradient(var(--jn-hairline), var(--jn-hairline));
+  background-size: 1px 100%;
+  background-position: 50% 0;
+  background-repeat: no-repeat;
+  box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.5);
+}
+
+.dropdown__link {
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.dropdown__link:hover,
+.dropdown__link--active {
+  background: var(--vp-c-default-soft);
+  color: var(--vp-c-brand-1);
+}
+
+/* 窄屏：mega menu 收成单列（此时下拉已在汉堡菜单内，不再需要中缝线） */
+@media (max-width: 996px) {
+  .navbar__inner {
+    min-height: 46px;
+    padding: 0;
+  }
+
+  .navbar__brand {
+    padding-right: 0.75rem;
+    margin-right: 0.25rem;
+  }
+
+  .navbar__items--right {
+    padding-left: 0.5rem;
+  }
+
+  .navbar__item.dropdown .dropdown__menu {
+    display: block;
+    min-width: 0;
+    padding: 0.25rem;
+    border: none;
+    border-radius: 0;
+    background-image: none;
+    box-shadow: none;
+  }
+}
+
+/* ============ 文档侧边栏 ============
+   参考 shadcnblocks「Sidebar 2」与 Tailgrids「Collapsible Dashboard Sidebar」：
+   分组之间有发丝分隔、组内层级用左侧引导线、行是圆角胶囊、激活态用淡品牌底，
+   字号收紧一档让层级读得出来（原版分类与叶子同字号同粗细，层级是平的）。 */
+
+.menu {
+  padding: 0.75rem 0 1.25rem 0.5rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+/* 行：圆角胶囊 + 统一内边距 */
+.menu__link {
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-800);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.menu__link:hover {
+  background: var(--vp-c-default-soft);
+  color: var(--vp-c-brand-1);
+}
+
+/* 折叠行整行底色交给内层链接，避免与外层 hover 叠成两层 */
+.menu__list-item-collapsible:hover {
+  background: transparent;
+}
+
+/* 一级分组：与上一组之间一条发丝线，标题加粗一档 */
+.theme-doc-sidebar-item-category-level-1 {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--jn-hairline);
+}
+
+.theme-doc-sidebar-item-category-level-1:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible > .menu__link {
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-900);
+}
+
+/* 当前页所在的一级分组用品牌色（按「组内含激活项」判定，不按展开/折叠状态） */
+.theme-doc-sidebar-item-category-level-1:has(.menu__link--active)
+  > .menu__list-item-collapsible
+  > .menu__link {
+  color: var(--vp-c-brand-1);
+}
+
+/* 组内层级：左侧发丝引导线（每深一层多一条） */
+.menu__list .menu__list {
+  margin-top: 0.15rem;
+  margin-left: 0.6rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--jn-hairline);
+}
+
+/* 当前页：淡品牌底胶囊 + 品牌字色（与顶栏一致，不用左侧色条） */
+.menu__link--active,
+.menu__link--active:hover {
+  background: var(--vp-c-default-soft);
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+}
+
+/* 折叠箭头：与行同高的圆角命中区 */
+.menu__caret {
+  border-radius: 8px;
+}
+
+.menu__caret:hover {
+  background: var(--vp-c-default-soft);
+}
+
+/* 侧边栏与正文之间的分隔线用统一发丝色 */
+.theme-doc-sidebar-container {
+  border-right-color: var(--jn-hairline) !important;
+}
+
+/* ============ 文档正文：标题 / 表格 / 代码 ============
+   参考 intentui 文档排版：层级用字号与留白拉开而非加粗加大；
+   表格是「发丝框容器 + 行分隔线」，不是每格都画线；代码块与内联代码同一套发丝框语言。 */
+
+/* ---- 标题 ---- */
+
+/* 页面标题：48px/700 过大，收一档并收紧字距 */
+.theme-doc-markdown > header h1,
+.theme-doc-markdown h1 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* 章节标题：32px/700 过重，降到 1.4rem/600，靠上方留白与一条发丝线分层 */
+.theme-doc-markdown h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin: 3rem 0 1rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--jn-hairline);
+}
+
+.theme-doc-markdown h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 2.25rem 0 0.75rem;
+}
+
+.theme-doc-markdown h4 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 1.75rem 0 0.6rem;
+}
+
+/* ---- 表格 ---- */
+
+/* 容器化：发丝边框 + 圆角 + 横向可滚（宽表不再被裁掉） */
+.theme-doc-markdown table {
+  display: block;
+  /* fit-content：框贴表体，避免 display:block 下内部表格盒收缩、右侧留出空带；
+     max-width 兜住宽表，超出部分由 overflow-x 横向滚动 */
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 12px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+/* 表头：不铺底色、不加粗成黑体，改用小号 + 灰字 + 一条分隔线 */
+.theme-doc-markdown thead th {
+  padding: 0.65rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--jn-hairline);
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 单元格：只留行分隔线，去掉每格四边的线 */
+.theme-doc-markdown tbody td {
+  padding: 0.65rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--jn-hairline);
+  vertical-align: middle;
+}
+
+.theme-doc-markdown tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.theme-doc-markdown tbody tr:hover td {
+  background: var(--vp-c-default-soft);
+}
+
+/* ---- 代码 ---- */
+
+/* 内联代码：灰底 + 小圆角，去掉边框（原样式带 1px 边框偏重） */
+.theme-doc-markdown :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border: none;
+  border-radius: 5px;
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-900);
+  font-size: 0.85em;
+}
+
+/* 代码块：同一套发丝框容器（圆角走主题变量，直接用 border-radius 会被主题的
+   .theme-code-block 规则按加载顺序压回 6.4px） */
+.theme-code-block {
+  --ifm-code-border-radius: 12px;
+  margin: 1.5rem 0;
+  border: 1px solid var(--jn-hairline);
+  border-radius: var(--ifm-code-border-radius);
+  overflow: hidden;
+}
+
+.theme-code-block pre {
+  margin: 0;
+  padding: 1.1rem 1.2rem;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+/* 代码块标题栏（有 title 时）：等宽小字 + 发丝线 */
+.theme-code-block div[class*='codeBlockTitle'] {
+  padding: 0.5rem 1.1rem;
+  border-bottom: 1px solid var(--jn-hairline);
+  background: var(--ifm-color-emphasis-100);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* 复制按钮：与全站一致的发丝胶囊 */
+.theme-code-block button[class*='copyButton'] {
+  top: 0.6rem;
+  right: 0.6rem;
+  border: 1px solid var(--jn-hairline);
+  border-radius: 8px;
+  background: var(--jn-surface);
 }
